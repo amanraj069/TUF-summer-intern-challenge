@@ -10,11 +10,14 @@ import CalendarGrid from "./components/CalendarGrid";
 export default function Home() {
   const {
     currentDate,
+    previousDate,
+    targetDate,
     startDate,
     endDate,
     hoverDate,
     setHoverDate,
     isFlipping,
+    flipDirection,
     isPickerOpen,
     setIsPickerOpen,
     notedRanges,
@@ -29,6 +32,8 @@ export default function Home() {
   } = useCalendarState();
 
   const themeColor = useCalendarTheme(currentDate);
+
+  const showFlip = isFlipping && previousDate && flipDirection;
 
   return (
     <main
@@ -54,49 +59,147 @@ export default function Home() {
         })}
 
         <div
-          className="paper-texture relative w-full md:h-[610px] bg-white flex flex-col rounded-xl sm:rounded-2xl transition-transform duration-500 ease-out"
+          className="paper-texture relative w-full md:h-[610px] bg-white flex flex-col rounded-xl sm:rounded-2xl"
           style={{
-            transformOrigin: "center -30px", // approximately where the nail is
-            transform: isFlipping
-              ? "rotateX(8deg) scale(0.98)"
-              : "rotateX(0deg) scale(1)",
-            boxShadow: isFlipping
-              ? "0 50px 100px -20px rgba(0,0,0,0.55), 0 25px 50px -10px rgba(0,0,0,0.3), 0 10px 20px -5px rgba(0,0,0,0.15)"
-              : "0 40px 90px -10px rgba(0,0,0,0.45), 0 20px 45px -5px rgba(0,0,0,0.25), 0 8px 20px 0px rgba(0,0,0,0.12), 0 2px 6px 0px rgba(0,0,0,0.06)",
+            transformOrigin: "center -30px",
+            boxShadow:
+              "0 40px 90px -10px rgba(0,0,0,0.45), 0 20px 45px -5px rgba(0,0,0,0.25), 0 8px 20px 0px rgba(0,0,0,0.12), 0 2px 6px 0px rgba(0,0,0,0.06)",
             zIndex: 5,
           }}
         >
           <WireBinding />
 
-          <CalendarHero
-            currentDate={currentDate}
-            themeColor={themeColor}
-            isPickerOpen={isPickerOpen}
-            setIsPickerOpen={setIsPickerOpen}
-            prevMonth={prevMonth}
-            nextMonth={nextMonth}
-            selectMonth={selectMonth}
-          />
+          {/* Flip stage — holds both old and new page layers */}
+          <div
+            className="relative flex-1 flex flex-col overflow-hidden rounded-t-xl sm:rounded-t-2xl rounded-b-xl sm:rounded-b-2xl"
+            style={{ perspective: "1200px" }}
+          >
+            {/* ── NEXT: Old page (previousDate) overlays & flips away ── */}
+            {showFlip && flipDirection === "next" && (
+              <div
+                key={`flip-next-${previousDate.toISOString()}`}
+                className="absolute inset-0 z-20 bg-white flex flex-col page-flip-next"
+                style={{ willChange: "transform, opacity" }}
+              >
+                <CalendarHero
+                  currentDate={previousDate}
+                  themeColor={themeColor}
+                  isPickerOpen={false}
+                  setIsPickerOpen={() => {}}
+                  prevMonth={() => {}}
+                  nextMonth={() => {}}
+                  selectMonth={() => {}}
+                />
+                <div className="flex flex-col-reverse md:flex-row flex-1 p-4 md:p-5 gap-3 md:gap-3 bg-white relative z-10 w-full">
+                  <NotesSection
+                    activeNotesLabel={activeNotesLabel}
+                    activeNotes={activeNotes}
+                    handleNotesChange={() => {}}
+                    clearActiveNote={() => {}}
+                    themeColor={themeColor}
+                  />
+                  <CalendarGrid
+                    currentDate={previousDate}
+                    startDate={startDate}
+                    endDate={endDate}
+                    hoverDate={null}
+                    setHoverDate={() => {}}
+                    onDateClick={() => {}}
+                    notedRanges={notedRanges}
+                    themeColor={themeColor}
+                  />
+                </div>
+              </div>
+            )}
 
-          <div className="flex flex-col-reverse md:flex-row flex-1 p-4 md:p-5 gap-3 md:gap-3 rounded-b-xl sm:rounded-b-2xl bg-white relative z-10 w-full">
-            <NotesSection
-              activeNotesLabel={activeNotesLabel}
-              activeNotes={activeNotes}
-              handleNotesChange={handleNotesChange}
-              clearActiveNote={clearActiveNote}
-              themeColor={themeColor}
-            />
+            {/* ── PREV: New page (targetDate) overlays & flips back into view ── */}
+            {showFlip && flipDirection === "prev" && targetDate && (
+              <div
+                key={`flip-prev-${targetDate.toISOString()}`}
+                className="absolute inset-0 z-20 bg-white flex flex-col page-flip-prev-in"
+                style={{ willChange: "transform, opacity" }}
+              >
+                <CalendarHero
+                  currentDate={targetDate}
+                  themeColor={themeColor}
+                  isPickerOpen={false}
+                  setIsPickerOpen={() => {}}
+                  prevMonth={() => {}}
+                  nextMonth={() => {}}
+                  selectMonth={() => {}}
+                />
+                <div className="flex flex-col-reverse md:flex-row flex-1 p-4 md:p-5 gap-3 md:gap-3 bg-white relative z-10 w-full">
+                  <NotesSection
+                    activeNotesLabel={activeNotesLabel}
+                    activeNotes={activeNotes}
+                    handleNotesChange={() => {}}
+                    clearActiveNote={() => {}}
+                    themeColor={themeColor}
+                  />
+                  <CalendarGrid
+                    currentDate={targetDate}
+                    startDate={startDate}
+                    endDate={endDate}
+                    hoverDate={null}
+                    setHoverDate={() => {}}
+                    onDateClick={() => {}}
+                    notedRanges={notedRanges}
+                    themeColor={themeColor}
+                  />
+                </div>
+              </div>
+            )}
 
-            <CalendarGrid
-              currentDate={currentDate}
-              startDate={startDate}
-              endDate={endDate}
-              hoverDate={hoverDate}
-              setHoverDate={setHoverDate}
-              onDateClick={onDateClick}
-              notedRanges={notedRanges}
-              themeColor={themeColor}
-            />
+            {/* ── Shadow cast during flip ── */}
+            {showFlip && (
+              <div
+                className="absolute inset-0 z-10 pointer-events-none page-flip-shadow rounded-xl sm:rounded-2xl"
+                style={{
+                  background:
+                    flipDirection === "next"
+                      ? "linear-gradient(to top, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.06) 40%, transparent 70%)"
+                      : "linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.06) 40%, transparent 70%)",
+                }}
+              />
+            )}
+
+            {/* ── Base page (current month) — always in flow ── */}
+            <div
+              className={`flex flex-col flex-1 ${
+                showFlip && flipDirection === "next" ? "page-reveal" : ""
+              }`}
+            >
+              <CalendarHero
+                currentDate={currentDate}
+                themeColor={themeColor}
+                isPickerOpen={isPickerOpen}
+                setIsPickerOpen={setIsPickerOpen}
+                prevMonth={prevMonth}
+                nextMonth={nextMonth}
+                selectMonth={selectMonth}
+              />
+
+              <div className="flex flex-col-reverse md:flex-row flex-1 p-4 md:p-5 gap-3 md:gap-3 rounded-b-xl sm:rounded-b-2xl bg-white relative z-10 w-full">
+                <NotesSection
+                  activeNotesLabel={activeNotesLabel}
+                  activeNotes={activeNotes}
+                  handleNotesChange={handleNotesChange}
+                  clearActiveNote={clearActiveNote}
+                  themeColor={themeColor}
+                />
+
+                <CalendarGrid
+                  currentDate={currentDate}
+                  startDate={startDate}
+                  endDate={endDate}
+                  hoverDate={hoverDate}
+                  setHoverDate={setHoverDate}
+                  onDateClick={onDateClick}
+                  notedRanges={notedRanges}
+                  themeColor={themeColor}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>

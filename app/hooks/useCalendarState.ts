@@ -32,6 +32,11 @@ export function useCalendarState() {
     type: "month",
   });
   const [isFlipping, setIsFlipping] = useState(false);
+  const [flipDirection, setFlipDirection] = useState<"next" | "prev" | null>(
+    null,
+  );
+  const [previousDate, setPreviousDate] = useState<Date | null>(null);
+  const [targetDate, setTargetDate] = useState<Date | null>(null);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
 
   const notedRanges = Object.entries(selectionNotes)
@@ -102,30 +107,52 @@ export function useCalendarState() {
     });
   };
 
-  const triggerFlipAnimation = () => {
+  const triggerFlipAnimation = (
+    direction: "next" | "prev",
+    newDateFn: (prev: Date) => Date,
+  ) => {
+    if (isFlipping) return;
+    setPreviousDate(currentDate);
+    setFlipDirection(direction);
     setIsFlipping(true);
-    setTimeout(() => setIsFlipping(false), 500);
+
+    if (direction === "next") {
+      setCurrentDate(newDateFn);
+    } else {
+      setTargetDate(newDateFn(currentDate));
+    }
+
+    setTimeout(() => {
+      if (direction === "prev") {
+        setCurrentDate(newDateFn);
+      }
+      setIsFlipping(false);
+      setFlipDirection(null);
+      setPreviousDate(null);
+      setTargetDate(null);
+    }, 650);
   };
 
   const nextMonth = () => {
-    triggerFlipAnimation();
-    setCurrentDate((prev) => addMonths(prev, 1));
+    triggerFlipAnimation("next", (prev) => addMonths(prev, 1));
     if (!startDate || endDate) {
       setActiveNoteContext({ type: "month" });
     }
   };
 
   const prevMonth = () => {
-    triggerFlipAnimation();
-    setCurrentDate((prev) => subMonths(prev, 1));
+    triggerFlipAnimation("prev", (prev) => subMonths(prev, 1));
     if (!startDate || endDate) {
       setActiveNoteContext({ type: "month" });
     }
   };
 
   const selectMonth = (idx: number) => {
-    triggerFlipAnimation();
-    setCurrentDate((prev) => new Date(prev.getFullYear(), idx, 1));
+    const direction = idx > currentDate.getMonth() ? "next" : "prev";
+    triggerFlipAnimation(
+      direction,
+      (prev) => new Date(prev.getFullYear(), idx, 1),
+    );
     if (!startDate || endDate) {
       setActiveNoteContext({ type: "month" });
     }
@@ -193,11 +220,14 @@ export function useCalendarState() {
 
   return {
     currentDate,
+    previousDate,
+    targetDate,
     startDate,
     endDate,
     hoverDate,
     setHoverDate,
     isFlipping,
+    flipDirection,
     isPickerOpen,
     setIsPickerOpen,
     notedRanges,
