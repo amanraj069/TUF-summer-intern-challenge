@@ -283,7 +283,7 @@ export default function Home() {
 
   const triggerFlipAnimation = () => {
     setIsFlipping(true);
-    setTimeout(() => setIsFlipping(false), 300);
+    setTimeout(() => setIsFlipping(false), 500);
   };
 
   const onDateClick = (day: Date) => {
@@ -360,7 +360,7 @@ export default function Home() {
 
     return Array.from({ length: weeksCount }, (_, weekIndex) => (
       <div
-        className="grid grid-cols-7 text-center w-full gap-y-1 mb-1"
+        className="grid grid-cols-7 text-center w-full gap-y-2 md:gap-y-1 mb-2 md:mb-1"
         key={`week-${weekIndex}`}
       >
         {Array.from({ length: 7 }, (_, dayIndex) => {
@@ -444,7 +444,7 @@ export default function Home() {
             >
               {showRangeTrail && !isSelStart && !isSelEnd && (
                 <div
-                  className="absolute top-1/2 -mt-3.5 h-7 w-full z-0"
+                  className="absolute top-1/2 -mt-4 md:-mt-3.5 h-8 md:h-7 w-full z-0"
                   style={{ backgroundColor: rangeFillColor }}
                 />
               )}
@@ -453,7 +453,7 @@ export default function Home() {
                 activeRangeEnd &&
                 hasRangeSpan && (
                   <div
-                    className={`absolute top-1/2 -mt-3.5 h-7 w-1/2 z-0 ${
+                    className={`absolute top-1/2 -mt-4 md:-mt-3.5 h-8 md:h-7 w-1/2 z-0 ${
                       isSelStart
                         ? cloneDay.getDay() === 0
                           ? "hidden"
@@ -469,7 +469,7 @@ export default function Home() {
                 {formattedDate}
               </div>
               {hasRangeNote && isCurrentMonth && !(isSelStart || isSelEnd) && (
-                <div className="absolute bottom-[2px] w-1 h-1 rounded-full bg-amber-500 z-20" />
+                <div className="absolute bottom-0 md:bottom-[2px] w-1.5 h-1.5 md:w-1 md:h-1 rounded-full bg-amber-500 z-20 shadow-sm md:shadow-none" />
               )}
             </div>
           );
@@ -498,15 +498,26 @@ export default function Home() {
       : format(currentDate, "MMMM yyyy");
 
   return (
-    <main className="fixed inset-0 flex items-center justify-center bg-zinc-200 overflow-hidden font-sans">
+    <main
+      className="min-h-screen w-full flex items-center justify-center bg-zinc-200 overflow-y-auto overflow-x-hidden font-sans py-12 md:py-16 px-4 sm:px-6"
+      style={{ perspective: "1200px" }}
+    >
       <div
-        className={`relative w-full max-w-[480px] h-[610px] bg-white shadow-2xl flex flex-col rounded-none transition-all duration-300 ${isFlipping ? "scale-[0.98] opacity-90" : "scale-100 opacity-100"}`}
+        className="relative w-full max-w-[480px] md:h-[610px] bg-white flex flex-col rounded-xl sm:rounded-2xl transition-transform duration-500 ease-out mt-8 md:mt-0 mb-8 md:mb-0"
+        style={{
+          transformOrigin: "center -30px", // approximately where the nail is
+          transform: isFlipping
+            ? "rotateX(8deg) scale(0.98)"
+            : "rotateX(0deg) scale(1)",
+          boxShadow: isFlipping
+            ? "0 30px 60px -15px rgba(0,0,0,0.3)"
+            : "0 20px 40px -10px rgba(0,0,0,0.15)",
+        }}
       >
         {/* Wire-O Binding — Twin-Loop with Rounder Extreme Curvature */}
-        <div className="absolute -top-[48px] left-0 w-full h-[66px] z-30 pointer-events-none select-none">
+        <div className="absolute top-0 left-0 w-full z-30 pointer-events-none select-none -translate-y-[70%]">
           <svg
             width="100%"
-            height="66"
             viewBox="0 0 480 66"
             preserveAspectRatio="xMidYMid meet"
             className="overflow-visible"
@@ -529,7 +540,7 @@ export default function Home() {
             </defs>
 
             {/* === HORIZONTAL ROD with Central Hook === */}
-            <g>
+            <g transform="translate(0, 6)">
               {/* Rod shadow */}
               <path
                 d="M 10 28 L 225 28 Q 240 0, 255 28 L 470 28"
@@ -543,14 +554,14 @@ export default function Home() {
                 d="M 10 28 L 225 28 Q 240 0, 255 28 L 470 28"
                 fill="none"
                 stroke="#2a2a2a"
-                strokeWidth="2.2"
+                strokeWidth="4.2"
                 strokeLinecap="round"
               />
 
               {/* Central Hook Stem */}
               <line
                 x1="240"
-                y1="0"
+                y1="14.5"
                 x2="240"
                 y2="-16"
                 stroke="#2a2a2a"
@@ -561,29 +572,32 @@ export default function Home() {
               <circle
                 cx="240"
                 cy="-19"
-                r="2.5"
+                r="6.8"
                 fill="#777"
                 stroke="#555"
-                strokeWidth="0.8"
+                strokeWidth="1.2"
               />
-              <line
+              {/* <line
                 x1="240"
-                y1="-21.5"
+                y1="-22.5"
                 x2="240"
-                y2="-27"
+                y2="-29"
                 stroke="#999"
-                strokeWidth="1"
+                strokeWidth="1.5"
                 strokeLinecap="round"
-              />
-              <circle cx="240" cy="-27.5" r="0.8" fill="#bbb" />
+              /> */}
+              {/* <circle cx="240" cy="-29.5" r="1.3" fill="#bbb" /> */}
             </g>
 
-            {/* === LEFT GROUP: 12 twin-loop pairs === */}
-            {[...Array(12).keys()].map((i) => {
-              const x = 20 + i * 17;
-              const distFromCenter = 11 - i;
-              const tilt = 1 + distFromCenter * 1.1; // More aggressive tilt for roundness
-              const loopHeight = 27 + distFromCenter * 0.4;
+            {/* === LEFT GROUP: 10 twin-loop pairs === */}
+            {[...Array(10).keys()].map((i) => {
+              const x = 20 + i * 20.8;
+              const distFromCenter = 9 - i;
+              const tilt = 1 + distFromCenter * 0.4;
+              const loopHeight = 28 + distFromCenter * 0.2;
+              const spread = 2;
+              const backTilt = 1;
+              const paperTop = 46.2; // Exactly 70% of 66, where the paper edge is
 
               return (
                 <g key={`left-${i}`} filter="url(#wire-shadow)">
@@ -605,32 +619,54 @@ export default function Home() {
                     fill="rgba(0,0,0,0.3)"
                   />
 
-                  {/* Twin Loop 1 (left wire) — Cubic Bezier for ROUNDNESS */}
+                  {/* Back Loop 1 (stops at paper edge to appear "behind") */}
                   <path
-                    d={`M ${x + 3} 61 C ${x + 3 - tilt} 61, ${x + 3 - tilt} ${61 - loopHeight}, ${x + 3 - tilt * 0.3} ${28}`}
+                    d={`M ${x + 3 + backTilt * 1.5} ${paperTop} C ${x + 3 + backTilt} 38, ${x + 3 + backTilt * 0.5} 32, ${x + 3 - tilt * 0.1} ${28}`}
+                    fill="none"
+                    stroke="#111"
+                    strokeWidth="1.2"
+                    strokeLinecap="round"
+                    opacity="0.85"
+                  />
+                  {/* Back Loop 2 */}
+                  <path
+                    d={`M ${x + 9 + backTilt * 1.5} ${paperTop} C ${x + 9 + backTilt} 38, ${x + 9 + backTilt * 0.5} 32, ${x + 9 - tilt * 0.1} ${28}`}
+                    fill="none"
+                    stroke="#111"
+                    strokeWidth="1.2"
+                    strokeLinecap="round"
+                    opacity="0.85"
+                  />
+
+                  {/* Twin Loop 1 (left wire) — Front */}
+                  <path
+                    d={`M ${x + 3} 61 C ${x + 3 - tilt - spread} 61, ${x + 3 - tilt - spread} ${61 - loopHeight}, ${x + 3 - tilt * 0.3} ${28}`}
                     fill="none"
                     stroke="#333"
-                    strokeWidth="1.5"
+                    strokeWidth="1.8"
                     strokeLinecap="round"
                   />
-                  {/* Twin Loop 2 (right wire) — Cubic Bezier for ROUNDNESS */}
+                  {/* Twin Loop 2 (right wire) — Front */}
                   <path
-                    d={`M ${x + 9} 61 C ${x + 9 - tilt} 61, ${x + 9 - tilt} ${61 - loopHeight}, ${x + 9 - tilt * 0.3} ${28}`}
+                    d={`M ${x + 9} 61 C ${x + 9 - tilt - spread} 61, ${x + 9 - tilt - spread} ${61 - loopHeight}, ${x + 9 - tilt * 0.3} ${28}`}
                     fill="none"
                     stroke="#333"
-                    strokeWidth="1.5"
+                    strokeWidth="1.8"
                     strokeLinecap="round"
                   />
                 </g>
               );
             })}
 
-            {/* === RIGHT GROUP: 12 twin-loop pairs === */}
-            {[...Array(12).keys()].map((i) => {
-              const x = 261 + i * 17;
+            {/* === RIGHT GROUP: 10 twin-loop pairs === */}
+            {[...Array(10).keys()].map((i) => {
+              const x = 261 + i * 20.8;
               const distFromCenter = i;
-              const tilt = 1 + distFromCenter * 1.1;
-              const loopHeight = 27 + distFromCenter * 0.4;
+              const tilt = 1 + distFromCenter * 0.4;
+              const loopHeight = 28 + distFromCenter * 0.2;
+              const spread = 2;
+              const backTilt = 1;
+              const paperTop = 46.2;
 
               return (
                 <g key={`right-${i}`} filter="url(#wire-shadow)">
@@ -652,20 +688,39 @@ export default function Home() {
                     fill="rgba(0,0,0,0.3)"
                   />
 
-                  {/* Twin Loop 1 (left wire) — Cubic Bezier for ROUNDNESS */}
+                  {/* Back Loop 1 (stops at paper edge to appear "behind") */}
                   <path
-                    d={`M ${x + 3} 61 C ${x + 3 + tilt} 61, ${x + 3 + tilt} ${61 - loopHeight}, ${x + 3 + tilt * 0.3} ${28}`}
+                    d={`M ${x + 3 - backTilt * 1.5} ${paperTop} C ${x + 3 - backTilt} 38, ${x + 3 - backTilt * 0.5} 32, ${x + 3 + tilt * 0.1} ${28}`}
+                    fill="none"
+                    stroke="#111"
+                    strokeWidth="1.2"
+                    strokeLinecap="round"
+                    opacity="0.85"
+                  />
+                  {/* Back Loop 2 */}
+                  <path
+                    d={`M ${x + 9 - backTilt * 1.5} ${paperTop} C ${x + 9 - backTilt} 38, ${x + 9 - backTilt * 0.5} 32, ${x + 9 + tilt * 0.1} ${28}`}
+                    fill="none"
+                    stroke="#111"
+                    strokeWidth="1.2"
+                    strokeLinecap="round"
+                    opacity="0.85"
+                  />
+
+                  {/* Twin Loop 1 (left wire) — Front */}
+                  <path
+                    d={`M ${x + 3} 61 C ${x + 3 + tilt + spread} 61, ${x + 3 + tilt + spread} ${61 - loopHeight}, ${x + 3 + tilt * 0.3} ${28}`}
                     fill="none"
                     stroke="#333"
-                    strokeWidth="1.5"
+                    strokeWidth="1.8"
                     strokeLinecap="round"
                   />
-                  {/* Twin Loop 2 (right wire) — Cubic Bezier for ROUNDNESS */}
+                  {/* Twin Loop 2 (right wire) — Front */}
                   <path
-                    d={`M ${x + 9} 61 C ${x + 9 + tilt} 61, ${x + 9 + tilt} ${61 - loopHeight}, ${x + 9 + tilt * 0.3} ${28}`}
+                    d={`M ${x + 9} 61 C ${x + 9 + tilt + spread} 61, ${x + 9 + tilt + spread} ${61 - loopHeight}, ${x + 9 + tilt * 0.3} ${28}`}
                     fill="none"
                     stroke="#333"
-                    strokeWidth="1.5"
+                    strokeWidth="1.8"
                     strokeLinecap="round"
                   />
                 </g>
@@ -675,7 +730,7 @@ export default function Home() {
         </div>
 
         {/* Image Section */}
-        <div className="relative h-[340px] overflow-hidden rounded-none shrink-0 [transform:translateZ(0)]">
+        <div className="relative h-[220px] md:h-[340px] overflow-hidden rounded-t-xl sm:rounded-t-2xl shrink-0 [transform:translateZ(0)]">
           <Image
             src={activeImage}
             alt="Calendar Hero"
@@ -684,7 +739,7 @@ export default function Home() {
             className="object-cover object-center"
             priority
           />
-          <div className="absolute inset-0 flex items-center justify-between px-4 z-20 opacity-100">
+          <div className="absolute inset-0 flex items-center justify-between px-4 z-20 opacity-100 pb-12 md:pb-0">
             <button
               onClick={prevMonth}
               className="bg-white/30 backdrop-blur-md p-2 rounded-full hover:bg-white/60 transition shadow-lg text-white"
@@ -699,7 +754,7 @@ export default function Home() {
             </button>
           </div>
           <svg
-            className="absolute bottom-0 left-0 w-full h-[150px]"
+            className="absolute bottom-0 left-0 w-full h-[60px] md:h-[150px]"
             style={{ color: themeColor }}
             preserveAspectRatio="none"
             viewBox="0 0 100 100"
@@ -708,7 +763,7 @@ export default function Home() {
             <polygon points="0,40 45,98 100,20 100,100 0,100" />
           </svg>
           <svg
-            className="absolute bottom-0 left-0 w-full h-[150px] text-white"
+            className="absolute bottom-0 left-0 w-full h-[60px] md:h-[150px] text-white"
             preserveAspectRatio="none"
             viewBox="0 0 100 100"
             fill="currentColor"
@@ -716,23 +771,23 @@ export default function Home() {
             <polygon points="0,55 45,95 65,70 100,110 0,110" />
             <polygon points="0,100 100,100 100,110 0,110" />
           </svg>
-          <div className="absolute bottom-6 right-6 text-right z-30 drop-shadow-lg">
-            <div className="text-white text-xl font-light leading-none opacity-80">
+          <div className="absolute bottom-3 md:bottom-6 right-4 md:right-6 text-right z-30 drop-shadow-lg">
+            <div className="text-white text-lg md:text-2xl font-semibold leading-none opacity-90 tracking-widest">
               {format(currentDate, "yyyy")}
             </div>
             <button
               onClick={() => setIsPickerOpen(!isPickerOpen)}
               className="group relative flex flex-col items-end outline-none focus:outline-none"
             >
-              <div className="text-white text-4xl font-extrabold leading-none tracking-tight uppercase mt-1 transition-transform group-hover:scale-105 active:scale-95">
-                {format(currentDate, "MMMM")}
+              <div className="text-white text-4xl md:text-5xl font-black leading-none tracking-tighter uppercase mt-1 transition-transform group-hover:scale-105 active:scale-95 drop-shadow-md">
+                {format(currentDate, "MMM")}
               </div>
-              <div className="h-0.5 w-0 bg-white transition-all group-hover:w-full mt-1 opacity-50" />
+              <div className="h-0.5 w-0 bg-white transition-all group-hover:w-full mt-0.5 md:mt-1 opacity-50" />
             </button>
 
             {/* Month Picker Overlay */}
             {isPickerOpen && (
-              <div className="absolute bottom-full right-0 mb-4 w-64 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl p-4 grid grid-cols-3 gap-2 border border-white/20 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <div className="absolute bottom-full right-0 mb-4 w-[260px] md:w-64 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl p-4 grid grid-cols-3 gap-2 border border-white/20 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
                 {Array.from({ length: 12 }).map((_, i) => {
                   const date = new Date(2022, i, 1);
                   const isSelected = i === currentDate.getMonth();
@@ -744,7 +799,7 @@ export default function Home() {
                         selectMonth(i);
                       }}
                       className={`
-                        px-2 py-3 rounded-xl text-[10px] font-bold uppercase transition-all
+                        px-2 py-3 rounded-xl text-xs md:text-[10px] font-bold uppercase transition-all
                         ${
                           isSelected
                             ? "bg-zinc-800 text-white scale-105 shadow-md"
@@ -762,20 +817,20 @@ export default function Home() {
         </div>
 
         {/* Bottom Content: Notes + Calendar Grid */}
-        <div className="flex flex-col md:flex-row flex-1 p-5 pt-4 gap-4 md:gap-3">
+        <div className="flex flex-col-reverse md:flex-row flex-1 p-4 md:p-5 gap-3 md:gap-3 rounded-b-xl sm:rounded-b-2xl bg-white relative z-10 w-full">
           {/* Notes Section - Left */}
-          <div className="w-full md:w-[34%] flex flex-col md:pr-4 border-r border-zinc-100">
-            <div className="flex flex-col mb-3">
-              <h3 className="text-[12px] font-extrabold text-zinc-800 tracking-tight">
+          <div className="w-full md:w-[34%] flex flex-col md:pr-4 md:border-r border-zinc-100 min-h-[120px] md:min-h-0 pt-3 md:pt-0 border-t md:border-t-0 md:border-b-0 pb-2 md:pb-0">
+            <div className="flex flex-row md:flex-col items-center md:items-start justify-between md:justify-start mb-2 md:mb-3">
+              <h3 className="text-xs md:text-[12px] font-extrabold text-zinc-800 tracking-tight">
                 Notes
               </h3>
-              <p className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-400 mt-0.5">
+              <p className="text-[10px] md:text-[8.5px] font-bold uppercase tracking-wider text-zinc-400 md:mt-0.5">
                 {activeNotesLabel}
               </p>
             </div>
             <div className="relative flex-1 flex flex-col">
               <textarea
-                className="w-full flex-1 resize-none bg-transparent outline-none text-[11px] font-medium text-zinc-700 leading-[24px] pt-[0px] custom-scrollbar break-words"
+                className="w-full flex-1 resize-none bg-transparent outline-none text-xs md:text-[11px] font-medium text-zinc-700 leading-[24px] pt-[0px] custom-scrollbar break-words"
                 style={{
                   backgroundImage:
                     "repeating-linear-gradient(transparent, transparent 23px, #e2e8f0 23px, #e2e8f0 24px)",
@@ -807,13 +862,13 @@ export default function Home() {
           </div>
 
           {/* Calendar Grid - Right */}
-          <div className="w-full md:w-[66%] flex flex-col pl-1">
-            <div className="grid grid-cols-7 text-center mb-2">
+          <div className="w-full md:w-[66%] flex flex-col md:pl-1">
+            <div className="grid grid-cols-7 text-center mb-1 md:mb-2 pt-1 md:pt-0">
               {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map(
                 (day, i) => (
                   <div
                     key={day}
-                    className={`text-[9px] font-bold tracking-wide ${i >= 5 ? "" : "text-gray-500"}`}
+                    className={`text-[10px] md:text-[9px] font-bold tracking-wider ${i >= 5 ? "" : "text-gray-500"}`}
                     style={i >= 5 ? { color: themeColor } : {}}
                   >
                     {day}
@@ -821,7 +876,7 @@ export default function Home() {
                 ),
               )}
             </div>
-            <div className="w-full relative h-[192px] flex flex-col justify-center">
+            <div className="w-full relative h-[210px] md:h-[192px] flex flex-col justify-center gap-0.5 md:gap-0">
               {renderCells()}
             </div>
           </div>
