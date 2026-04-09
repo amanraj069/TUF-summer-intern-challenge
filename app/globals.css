@@ -39,3 +39,39 @@ body {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Calendar flip animation */
+.calendar-flip-wrapper {
+  perspective: 1200px;
+  position: relative;
+}
+
+.calendar-flip-old {
+  position: absolute;
+  inset: 0;
+  transform-origin: top center;
+  backface-visibility: hidden;
+  animation: calendarFlipUp 0.75s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  z-index: 20;
+  background: white;
+  border-radius: inherit;
+}
+
+@keyframes calendarFlipUp {
+  0% {
+    transform: rotateX(0deg) translateZ(0px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  35% {
+    transform: rotateX(-25deg) translateZ(60px);
+    box-shadow: 0 40px 80px rgba(0, 0, 0, 0.35);
+  }
+  65% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotateX(-90deg) translateZ(0px);
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    opacity: 0;
+  }
+}
