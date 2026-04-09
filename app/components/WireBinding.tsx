@@ -10,16 +10,41 @@ export default function WireBinding() {
         <defs>
           <filter id="wire-shadow" x="-50%" y="-50%" width="200%" height="200%">
             <feDropShadow
-              dx="0.3"
-              dy="0.8"
-              stdDeviation="0.5"
-              floodOpacity="0.25"
+              dx="1.5"
+              dy="4"
+              stdDeviation="2.5"
+              floodOpacity="0.5"
             />
+          </filter>
+          <filter id="rod-shadow" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow
+              dx="0"
+              dy="5"
+              stdDeviation="3.5"
+              floodOpacity="0.45"
+            />
+          </filter>
+          <filter id="nail-shadow" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="2" dy="5" stdDeviation="3" floodOpacity="0.55" />
+          </filter>
+          <filter id="hole-inset" x="-50%" y="-50%" width="200%" height="200%">
+            <feComponentTransfer in="SourceAlpha">
+              <feFuncA type="table" tableValues="1 0" />
+            </feComponentTransfer>
+            <feGaussianBlur stdDeviation="1.2" />
+            <feOffset dx="0" dy="0.8" result="offsetblur" />
+            <feFlood floodColor="#000" floodOpacity="0.6" />
+            <feComposite in2="offsetblur" operator="in" />
+            <feComposite in2="SourceAlpha" operator="in" />
+            <feMerge>
+              <feMergeNode in="SourceGraphic" />
+              <feMergeNode />
+            </feMerge>
           </filter>
         </defs>
 
         {/* === HORIZONTAL ROD with Central Hook === */}
-        <g transform="translate(0, 6)">
+        <g transform="translate(0, 6)" filter="url(#rod-shadow)">
           {/* Rod shadow */}
           <path
             d="M 10 28 L 225 28 Q 240 0, 255 28 L 470 28"
@@ -47,10 +72,13 @@ export default function WireBinding() {
             strokeWidth="2.2"
             strokeLinecap="round"
           />
-          {/* Nail head */}
+        </g>
+
+        {/* Nail head with its own shadow */}
+        <g filter="url(#nail-shadow)">
           <circle
             cx="240"
-            cy="-19"
+            cy="-13"
             r="6.8"
             fill="#777"
             stroke="#555"
@@ -76,15 +104,8 @@ export default function WireBinding() {
                 width="12"
                 height="7"
                 rx="1.5"
-                fill="#141414"
-              />
-              <rect
-                x={x}
-                y="58"
-                width="12"
-                height="1.5"
-                rx="0.5"
-                fill="rgba(0,0,0,0.3)"
+                fill="#c4c4c9"
+                filter="url(#hole-inset)"
               />
 
               <path
@@ -140,15 +161,8 @@ export default function WireBinding() {
                 width="12"
                 height="7"
                 rx="1.5"
-                fill="#141414"
-              />
-              <rect
-                x={x}
-                y="58"
-                width="12"
-                height="1.5"
-                rx="0.5"
-                fill="rgba(0,0,0,0.3)"
+                fill="#c4c4c9"
+                filter="url(#hole-inset)"
               />
 
               <path
