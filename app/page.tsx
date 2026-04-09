@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import {
   format,
@@ -13,56 +13,165 @@ import {
   isSameMonth,
   isSameDay,
   addDays,
+  differenceInCalendarDays,
   isAfter,
-  isBefore,
   isWithinInterval,
 } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 // Thematic images for different months/seasons
 const MONTH_IMAGES = [
-  "https://images.unsplash.com/photo-1542314831-c53cd3b82756?q=80&w=1000&auto=format&fit=crop", // Jan - Snow
-  "https://images.unsplash.com/photo-1444458514120-cf17fa42d17c?q=80&w=1000&auto=format&fit=crop", // Feb - Lake
+  "https://images.unsplash.com/photo-1478265409131-1f65c88f965c?q=80&w=1000&auto=format&fit=crop", // Jan - Snow
+  "https://images.unsplash.com/photo-1414609245224-afa02bfb3fda?q=80&w=1000&auto=format&fit=crop", // Feb - Lake
   "https://images.unsplash.com/photo-1462275646964-a0e3386b89fa?q=80&w=1000&auto=format&fit=crop", // Mar - Spring Blossom
   "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?q=80&w=1000&auto=format&fit=crop", // Apr - Hills
   "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000&auto=format&fit=crop", // May - Beach
-  "https://images.unsplash.com/photo-1433602484045-8fbc9f72c3d5?q=80&w=1000&auto=format&fit=crop", // Jun - Peak Summer
-  "https://images.unsplash.com/photo-1473496169904-658ba37448eb?q=80&w=1000&auto=format&fit=crop", // Jul - Ocean
+  "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=1000&auto=format&fit=crop", // Jun - Peak Summer
+  "https://images.unsplash.com/photo-1493246507139-91e8fad9978e?q=80&w=1000&auto=format&fit=crop", // Jul - Ocean
   "https://images.unsplash.com/photo-1508964942454-1a56651d54ac?q=80&w=1000&auto=format&fit=crop", // Aug - Forest
   "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=1000&auto=format&fit=crop", // Sep - Fall Leaves
   "https://images.unsplash.com/photo-1511497584788-876760111969?q=80&w=1000&auto=format&fit=crop", // Oct - Autumn Path
   "https://images.unsplash.com/photo-1486915309851-b0cc1f8a0084?q=80&w=1000&auto=format&fit=crop", // Nov - Cozy
-  "https://images.unsplash.com/photo-1517260715366-5121b67f1395?q=80&w=1000&auto=format&fit=crop", // Dec - Winter Cabin
+  "https://images.unsplash.com/photo-1516466723877-e4ec1d736c8a?q=80&w=1000&auto=format&fit=crop", // Dec - Winter Cabin
 ];
+
+type NotesMap = Record<string, string>;
+type NoteContext = { type: "month" } | { type: "selection"; key: string };
+type SelectionRange = { key: string; start: Date; end: Date };
+
+const DEFAULT_CALENDAR_DATE = new Date(2022, 0, 1);
+
+const STORAGE_KEYS = {
+  startDate: "calendar-start",
+  endDate: "calendar-end",
+  monthNotes: "calendar-month-notes",
+  selectionNotes: "calendar-selection-notes",
+  legacyNotes: "calendar-notes",
+} as const;
+
+const getMonthKey = (date: Date) => format(date, "yyyy-MM");
+
+const normalizeSelection = (start: Date, end?: Date | null) => {
+  if (!end) return [start, start] as const;
+  return isAfter(start, end)
+    ? ([end, start] as const)
+    : ([start, end] as const);
+};
+
+const getSelectionKey = (start: Date, end?: Date | null) => {
+  const [normalizedStart, normalizedEnd] = normalizeSelection(start, end);
+  return `${format(normalizedStart, "yyyy-MM-dd")}__${format(normalizedEnd, "yyyy-MM-dd")}`;
+};
+
+const getStoredMap = (key: string): NotesMap => {
+  if (typeof window === "undefined") return {};
+
+  const savedValue = localStorage.getItem(key);
+  if (!savedValue) return {};
+
+  try {
+    const parsed = JSON.parse(savedValue) as NotesMap;
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+};
+
+const getStoredDate = (key: string): Date | null => {
+  if (typeof window === "undefined") return null;
+  const savedValue = localStorage.getItem(key);
+  if (!savedValue) return null;
+
+  const parsed = new Date(savedValue);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const getInitialMonthNotes = (): NotesMap => {
+  const persistedMonthNotes = getStoredMap(STORAGE_KEYS.monthNotes);
+  if (Object.keys(persistedMonthNotes).length > 0) {
+    return persistedMonthNotes;
+  }
+
+  if (typeof window !== "undefined") {
+    const legacyNotes = localStorage.getItem(STORAGE_KEYS.legacyNotes);
+    if (legacyNotes) {
+      return { [getMonthKey(DEFAULT_CALENDAR_DATE)]: legacyNotes };
+    }
+  }
+
+  return {};
+};
+
+const parseSelectionKey = (key: string): SelectionRange | null => {
+  const [startRaw, endRaw] = key.split("__");
+  if (!startRaw || !endRaw) return null;
+
+  const start = new Date(`${startRaw}T00:00:00`);
+  const end = new Date(`${endRaw}T00:00:00`);
+
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return null;
+  }
+
+  const [normalizedStart, normalizedEnd] = normalizeSelection(start, end);
+  return { key, start: normalizedStart, end: normalizedEnd };
+};
 
 export default function Home() {
   const [themeColor, setThemeColor] = useState<string>("#38bdf8");
-  const [currentDate, setCurrentDate] = useState(new Date()); // default to current
+  const [currentDate, setCurrentDate] = useState(DEFAULT_CALENDAR_DATE);
+
+  // Hydration-safe state initialization (always null empty on first pass)
+  const [isMounted, setIsMounted] = useState(false);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [hoverDate, setHoverDate] = useState<Date | null>(null);
-  const [notes, setNotes] = useState<string>("");
-  const [isClient, setIsClient] = useState(false);
+  const [monthNotes, setMonthNotes] = useState<NotesMap>({});
+  const [selectionNotes, setSelectionNotes] = useState<NotesMap>({});
+  const [activeNoteContext, setActiveNoteContext] = useState<NoteContext>({
+    type: "month",
+  });
   const [isFlipping, setIsFlipping] = useState(false);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
 
-  // Load state from local storage on mount
+  const notedRanges = Object.entries(selectionNotes)
+    .filter(([, note]) => note.trim().length > 0)
+    .map(([key]) => parseSelectionKey(key))
+    .filter((range): range is SelectionRange => Boolean(range));
+
+  // Load from localStorage ONLY after mounting (fixes hydration error)
   useEffect(() => {
-    setIsClient(true);
-    setCurrentDate(new Date(2022, 0, 1)); // Enforce Jan 2022 locally to match design
+    setIsMounted(true);
+    const storedStart = getStoredDate(STORAGE_KEYS.startDate);
+    const storedEnd = getStoredDate(STORAGE_KEYS.endDate);
 
-    const savedNotes = localStorage.getItem("calendar-notes");
-    if (savedNotes) setNotes(savedNotes);
+    if (storedStart) {
+      setStartDate(storedStart);
+      if (storedEnd) setEndDate(storedEnd);
 
-    const savedStart = localStorage.getItem("calendar-start");
-    const savedEnd = localStorage.getItem("calendar-end");
-    if (savedStart) setStartDate(new Date(savedStart));
-    if (savedEnd) setEndDate(new Date(savedEnd));
+      const activeKey = getSelectionKey(storedStart, storedEnd || storedStart);
+      setActiveNoteContext({ type: "selection", key: activeKey });
+    }
+
+    setMonthNotes(getInitialMonthNotes());
+    setSelectionNotes(getStoredMap(STORAGE_KEYS.selectionNotes));
   }, []);
+
+  useEffect(() => {
+    if (!isMounted) return;
+    localStorage.setItem(STORAGE_KEYS.monthNotes, JSON.stringify(monthNotes));
+  }, [monthNotes, isMounted]);
+
+  useEffect(() => {
+    if (!isMounted) return;
+    localStorage.setItem(
+      STORAGE_KEYS.selectionNotes,
+      JSON.stringify(selectionNotes),
+    );
+  }, [selectionNotes, isMounted]);
 
   // Extract theme color when image changes
   useEffect(() => {
-    if (!isClient) return;
     const monthIndex = currentDate.getMonth();
     const activeImage = MONTH_IMAGES[monthIndex];
 
@@ -90,36 +199,85 @@ export default function Home() {
           b += data[i + 2];
           count++;
         }
-        setThemeColor(
-          `rgb(${Math.floor(r / count)}, ${Math.floor(g / count)}, ${Math.floor(b / count)})`,
-        );
+
+        let rAvg = Math.floor(r / count);
+        let gAvg = Math.floor(g / count);
+        let bAvg = Math.floor(b / count);
+
+        // Prevent the theme color from being too bright (ensures white text is visible)
+        const luminance = 0.299 * rAvg + 0.587 * gAvg + 0.114 * bAvg;
+        if (luminance > 160) {
+          const factor = 160 / luminance;
+          rAvg = Math.floor(rAvg * factor);
+          gAvg = Math.floor(gAvg * factor);
+          bAvg = Math.floor(bAvg * factor);
+        }
+
+        const toHex = (c: number) => c.toString(16).padStart(2, "0");
+        setThemeColor(`#${toHex(rAvg)}${toHex(gAvg)}${toHex(bAvg)}`);
       } catch (e) {
         console.error("Canvas taint error, fallback to default", e);
         setThemeColor("#38bdf8"); // fallback
       }
     };
-  }, [currentDate, isClient]);
+  }, [currentDate]);
 
   const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newNotes = e.target.value;
-    setNotes(newNotes);
-    localStorage.setItem("calendar-notes", newNotes);
+
+    if (activeNoteContext.type === "selection") {
+      setSelectionNotes((prev) => ({
+        ...prev,
+        [activeNoteContext.key]: newNotes,
+      }));
+      return;
+    }
+
+    const monthKey = getMonthKey(currentDate);
+    setMonthNotes((prev) => ({ ...prev, [monthKey]: newNotes }));
+  };
+
+  const clearActiveNote = () => {
+    if (activeNoteContext.type === "selection") {
+      setSelectionNotes((prev) => {
+        const next = { ...prev };
+        delete next[activeNoteContext.key];
+        return next;
+      });
+      return;
+    }
+
+    const monthKey = getMonthKey(currentDate);
+    setMonthNotes((prev) => {
+      const next = { ...prev };
+      delete next[monthKey];
+      return next;
+    });
   };
 
   const nextMonth = () => {
     triggerFlipAnimation();
     setCurrentDate(addMonths(currentDate, 1));
+    if (!startDate || endDate) {
+      setActiveNoteContext({ type: "month" });
+    }
   };
 
   const prevMonth = () => {
     triggerFlipAnimation();
     setCurrentDate(subMonths(currentDate, 1));
+    if (!startDate || endDate) {
+      setActiveNoteContext({ type: "month" });
+    }
   };
 
   const selectMonth = (idx: number) => {
     triggerFlipAnimation();
     const newDate = new Date(currentDate.getFullYear(), idx, 1);
     setCurrentDate(newDate);
+    if (!startDate || endDate) {
+      setActiveNoteContext({ type: "month" });
+    }
     setIsPickerOpen(false);
   };
 
@@ -129,22 +287,42 @@ export default function Home() {
   };
 
   const onDateClick = (day: Date) => {
-    if (startDate && endDate) {
-      setStartDate(day);
-      setEndDate(null);
-      localStorage.setItem("calendar-start", day.toISOString());
-      localStorage.removeItem("calendar-end");
-    } else if (startDate && !endDate) {
-      if (isAfter(day, startDate) || isSameDay(day, startDate)) {
-        setEndDate(day);
-        localStorage.setItem("calendar-end", day.toISOString());
-      } else {
-        setStartDate(day);
-        localStorage.setItem("calendar-start", day.toISOString());
-      }
+    const matchingRange = notedRanges.find((range) =>
+      isWithinInterval(day, { start: range.start, end: range.end }),
+    );
+
+    if (matchingRange) {
+      setStartDate(matchingRange.start);
+      setEndDate(matchingRange.end);
+      setActiveNoteContext({ type: "selection", key: matchingRange.key });
+      localStorage.setItem(
+        STORAGE_KEYS.startDate,
+        matchingRange.start.toISOString(),
+      );
+      localStorage.setItem(
+        STORAGE_KEYS.endDate,
+        matchingRange.end.toISOString(),
+      );
+      return;
+    }
+
+    if (startDate && !endDate) {
+      const [rangeStart, rangeEnd] = normalizeSelection(startDate, day);
+      setStartDate(rangeStart);
+      setEndDate(rangeEnd);
+      const key = getSelectionKey(rangeStart, rangeEnd);
+      setActiveNoteContext({ type: "selection", key });
+      localStorage.setItem(STORAGE_KEYS.startDate, rangeStart.toISOString());
+      localStorage.setItem(STORAGE_KEYS.endDate, rangeEnd.toISOString());
     } else {
       setStartDate(day);
-      localStorage.setItem("calendar-start", day.toISOString());
+      setEndDate(null);
+      setActiveNoteContext({
+        type: "selection",
+        key: getSelectionKey(day, day),
+      });
+      localStorage.setItem(STORAGE_KEYS.startDate, day.toISOString());
+      localStorage.removeItem(STORAGE_KEYS.endDate);
     }
   };
 
@@ -153,106 +331,171 @@ export default function Home() {
     const monthEnd = endOfMonth(monthStart);
     const startDateGrid = startOfWeek(monthStart, { weekStartsOn: 1 });
     const endDateGrid = endOfWeek(monthEnd, { weekStartsOn: 1 });
+    const confirmedRange =
+      startDate && endDate ? normalizeSelection(startDate, endDate) : null;
 
-    const dateFormat = "d";
-    const rows = [];
-    let days = [];
-    let day = startDateGrid;
-    let formattedDate = "";
+    // We only preview if we have clicked a startDate (so we are building a range),
+    // and we've held it / are moving to the end date.
+    // The user requested: "This hover effect should only come when we click and select one perticular date, not just by hover"
+    const previewRange =
+      startDate && !endDate && hoverDate
+        ? normalizeSelection(startDate, hoverDate)
+        : null;
 
-    while (day <= endDateGrid) {
-      for (let i = 0; i < 7; i++) {
-        formattedDate = format(day, dateFormat);
-        const cloneDay = day;
+    const hasConfirmedRange = Boolean(confirmedRange);
+    const hasPreviewRange =
+      Boolean(previewRange) &&
+      !hasConfirmedRange &&
+      !isSameDay(previewRange![0], previewRange![1]);
 
-        const isCurrentMonth = isSameMonth(day, monthStart);
-        const isSelStart = startDate && isSameDay(day, startDate);
-        const isSelEnd = endDate && isSameDay(day, endDate);
-        const isInSelRange =
-          startDate &&
-          endDate &&
-          isWithinInterval(day, { start: startDate, end: endDate });
+    const activeRange = confirmedRange ?? previewRange;
+    const activeRangeStart = activeRange ? activeRange[0] : null;
+    const activeRangeEnd = activeRange ? activeRange[1] : null;
+    const hasRangeSpan =
+      Boolean(activeRangeStart && activeRangeEnd) &&
+      !isSameDay(activeRangeStart!, activeRangeEnd!);
 
-        const isHoverInRange =
-          startDate && !endDate && hoverDate && isAfter(hoverDate, startDate)
-            ? isWithinInterval(day, { start: startDate, end: hoverDate })
-            : false;
+    const totalDays = differenceInCalendarDays(endDateGrid, startDateGrid) + 1;
+    const weeksCount = Math.ceil(totalDays / 7);
 
-        let cellStyles =
-          "text-xs font-semibold flex items-center justify-center cursor-pointer transition-all duration-200 aspect-square rounded-full w-7 h-7 mx-auto ";
-        let dynamicStyle: React.CSSProperties = {};
+    return Array.from({ length: weeksCount }, (_, weekIndex) => (
+      <div
+        className="grid grid-cols-7 text-center w-full gap-y-1 mb-1"
+        key={`week-${weekIndex}`}
+      >
+        {Array.from({ length: 7 }, (_, dayIndex) => {
+          const cloneDay = addDays(startDateGrid, weekIndex * 7 + dayIndex);
+          const formattedDate = format(cloneDay, "d");
 
-        if (!isCurrentMonth) {
-          cellStyles += "text-gray-300 pointer-events-none ";
-        } else if (isSelStart || isSelEnd) {
-          cellStyles += "text-white shadow-md scale-110 z-10 ";
-          dynamicStyle = { backgroundColor: themeColor };
-        } else if (isInSelRange || isHoverInRange) {
-          dynamicStyle = {
-            backgroundColor: `${themeColor}20`,
-            color: themeColor,
-          };
-        } else if (i >= 5) {
-          cellStyles += "hover:bg-gray-100 ";
-          dynamicStyle = { color: themeColor };
-        } else {
-          cellStyles += "text-gray-800 hover:bg-gray-100 ";
-        }
+          const isCurrentMonth = isSameMonth(cloneDay, monthStart);
+          const isSelStart = Boolean(
+            activeRangeStart && isSameDay(cloneDay, activeRangeStart),
+          );
+          const isSelEnd = Boolean(
+            activeRangeEnd && isSameDay(cloneDay, activeRangeEnd),
+          );
+          const isInConfirmedRange = Boolean(
+            confirmedRange &&
+            isWithinInterval(cloneDay, {
+              start: confirmedRange[0],
+              end: confirmedRange[1],
+            }),
+          );
+          const isInHoverRange = Boolean(
+            hasPreviewRange &&
+            previewRange &&
+            isWithinInterval(cloneDay, {
+              start: previewRange[0],
+              end: previewRange[1],
+            }),
+          );
 
-        days.push(
-          <div
-            className="flex items-center justify-center w-full relative group"
-            key={day.toString()}
-            onClick={() => onDateClick(cloneDay)}
-            onMouseEnter={() => setHoverDate(cloneDay)}
-            onMouseLeave={() => setHoverDate(null)}
-          >
-            {(isInSelRange || isHoverInRange) && !isSelStart && !isSelEnd && (
-              <div
-                className="absolute top-1/2 -mt-3.5 h-7 w-full -z-10"
-                style={{ backgroundColor: `${themeColor}20` }}
-              />
-            )}
-            {(isSelStart || isSelEnd) &&
-              startDate &&
-              (endDate || hoverDate) && (
+          const isToday = isSameDay(cloneDay, new Date());
+          const hasRangeNote = notedRanges.some((range) =>
+            isWithinInterval(cloneDay, { start: range.start, end: range.end }),
+          );
+          const showRangeTrail = isInConfirmedRange || isInHoverRange;
+          const rangeFillColor = isInConfirmedRange
+            ? `${themeColor}38`
+            : `${themeColor}22`;
+
+          let cellStyles =
+            "text-xs font-semibold flex items-center justify-center cursor-pointer transition-all duration-200 aspect-square rounded-full w-7 h-7 mx-auto relative z-10 ";
+          let dynamicStyle: React.CSSProperties = {};
+
+          if (isSelStart || isSelEnd) {
+            cellStyles += "text-white shadow-md scale-110 ";
+            dynamicStyle = {
+              backgroundColor: hasConfirmedRange
+                ? themeColor
+                : `${themeColor}dd`,
+            };
+          } else if (showRangeTrail) {
+            dynamicStyle = {
+              color: themeColor,
+            };
+          } else if (hasRangeNote) {
+            cellStyles += "text-amber-700 font-bold hover:bg-amber-100 ";
+          } else if (dayIndex >= 5) {
+            cellStyles += "hover:bg-gray-100 ";
+            dynamicStyle = { color: themeColor };
+          } else {
+            cellStyles += "text-gray-800 hover:bg-gray-100 ";
+          }
+
+          if (!isCurrentMonth) {
+            if (!(isSelStart || isSelEnd || showRangeTrail)) {
+              cellStyles = cellStyles.replace("text-gray-800", "text-zinc-300");
+              dynamicStyle = { color: "#d4d4d8" };
+            }
+          }
+
+          if (isToday && isCurrentMonth && !(isSelStart || isSelEnd)) {
+            cellStyles += "ring-1 ring-sky-500 ring-offset-1 ";
+          }
+
+          return (
+            <div
+              className={`flex items-center justify-center w-full relative group cursor-pointer ${!isCurrentMonth ? "opacity-60" : ""}`}
+              key={cloneDay.toISOString()}
+              onClick={() => onDateClick(cloneDay)}
+              onMouseEnter={() => setHoverDate(cloneDay)}
+              onMouseLeave={() => setHoverDate(null)}
+            >
+              {showRangeTrail && !isSelStart && !isSelEnd && (
                 <div
-                  className={`absolute top-1/2 -mt-3.5 h-7 w-1/2 -z-10 ${
-                    isSelStart
-                      ? cloneDay.getDay() === 0
-                        ? "hidden"
-                        : "right-0"
-                      : cloneDay.getDay() === 1
-                        ? "hidden"
-                        : "left-0"
-                  }`}
-                  style={{ backgroundColor: `${themeColor}20` }}
+                  className="absolute top-1/2 -mt-3.5 h-7 w-full z-0"
+                  style={{ backgroundColor: rangeFillColor }}
                 />
               )}
-            <div className={cellStyles} style={dynamicStyle}>
-              {formattedDate}
+              {(isSelStart || isSelEnd) &&
+                activeRangeStart &&
+                activeRangeEnd &&
+                hasRangeSpan && (
+                  <div
+                    className={`absolute top-1/2 -mt-3.5 h-7 w-1/2 z-0 ${
+                      isSelStart
+                        ? cloneDay.getDay() === 0
+                          ? "hidden"
+                          : "right-0"
+                        : cloneDay.getDay() === 1
+                          ? "hidden"
+                          : "left-0"
+                    }`}
+                    style={{ backgroundColor: rangeFillColor }}
+                  />
+                )}
+              <div className={cellStyles} style={dynamicStyle}>
+                {formattedDate}
+              </div>
+              {hasRangeNote && isCurrentMonth && !(isSelStart || isSelEnd) && (
+                <div className="absolute bottom-[2px] w-1 h-1 rounded-full bg-amber-500 z-20" />
+              )}
             </div>
-          </div>,
-        );
-        day = addDays(day, 1);
-      }
-      rows.push(
-        <div
-          className="grid grid-cols-7 text-center w-full gap-y-1 mb-1"
-          key={day.toString()}
-        >
-          {days}
-        </div>,
-      );
-      days = [];
-    }
-    return rows;
+          );
+        })}
+      </div>
+    ));
   };
-
-  if (!isClient) return null;
 
   const monthIndex = currentDate.getMonth();
   const activeImage = MONTH_IMAGES[monthIndex];
+  const activeSelectionRange =
+    activeNoteContext.type === "selection"
+      ? parseSelectionKey(activeNoteContext.key)
+      : null;
+  const activeNotes =
+    activeNoteContext.type === "selection"
+      ? (selectionNotes[activeNoteContext.key] ?? "")
+      : (monthNotes[getMonthKey(currentDate)] ?? "");
+  const activeNotesLabel =
+    activeNoteContext.type === "selection"
+      ? activeSelectionRange
+        ? isSameDay(activeSelectionRange.start, activeSelectionRange.end)
+          ? format(activeSelectionRange.start, "dd MMM yyyy")
+          : `${format(activeSelectionRange.start, "dd MMM")} - ${format(activeSelectionRange.end, "dd MMM yyyy")}`
+        : "Select day(s) to attach a note"
+      : format(currentDate, "MMMM yyyy");
 
   return (
     <main className="fixed inset-0 flex items-center justify-center bg-zinc-200 overflow-hidden font-sans">
@@ -519,26 +762,52 @@ export default function Home() {
         </div>
 
         {/* Bottom Content: Notes + Calendar Grid */}
-        <div className="flex p-5 pt-4 gap-3">
+        <div className="flex flex-col md:flex-row flex-1 p-5 pt-4 gap-4 md:gap-3">
           {/* Notes Section - Left */}
-          <div className="w-[32%] flex flex-col pr-3">
-            <h3 className="text-[11px] font-bold text-gray-800 mb-2">Notes</h3>
-            <textarea
-              className="w-full flex-1 resize-none bg-transparent outline-none text-[10.5px] font-medium text-gray-700 leading-[24px] min-h-[168px] pt-[4px] custom-scrollbar break-words"
-              style={{
-                backgroundImage:
-                  "repeating-linear-gradient(transparent, transparent 23px, #cbd5e1 23px, #cbd5e1 24px)",
-                backgroundAttachment: "local",
-                backgroundPosition: "0 0",
-              }}
-              value={notes}
-              onChange={handleNotesChange}
-              spellCheck="false"
-            />
+          <div className="w-full md:w-[34%] flex flex-col md:pr-4 border-r border-zinc-100">
+            <div className="flex flex-col mb-3">
+              <h3 className="text-[12px] font-extrabold text-zinc-800 tracking-tight">
+                Notes
+              </h3>
+              <p className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-400 mt-0.5">
+                {activeNotesLabel}
+              </p>
+            </div>
+            <div className="relative flex-1 flex flex-col">
+              <textarea
+                className="w-full flex-1 resize-none bg-transparent outline-none text-[11px] font-medium text-zinc-700 leading-[24px] pt-[0px] custom-scrollbar break-words"
+                style={{
+                  backgroundImage:
+                    "repeating-linear-gradient(transparent, transparent 23px, #e2e8f0 23px, #e2e8f0 24px)",
+                  backgroundAttachment: "local",
+                  backgroundPosition: "0 2px",
+                }}
+                value={activeNotes}
+                onChange={handleNotesChange}
+                placeholder="Write your notes..."
+                spellCheck="false"
+              />
+            </div>
+            <div className="mt-2 flex items-center justify-end">
+              <button
+                onClick={clearActiveNote}
+                className={`text-[8.5px] font-bold uppercase tracking-wider transition-all duration-200 ${
+                  activeNotes.length > 0
+                    ? "opacity-80 hover:opacity-100 drop-shadow-sm"
+                    : "opacity-0 pointer-events-none"
+                }`}
+                style={{
+                  color: activeNotes.length > 0 ? themeColor : undefined,
+                }}
+                disabled={activeNotes.length === 0}
+              >
+                Clear
+              </button>
+            </div>
           </div>
 
           {/* Calendar Grid - Right */}
-          <div className="w-[68%] flex flex-col">
+          <div className="w-full md:w-[66%] flex flex-col pl-1">
             <div className="grid grid-cols-7 text-center mb-2">
               {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map(
                 (day, i) => (
