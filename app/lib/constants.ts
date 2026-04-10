@@ -13,7 +13,7 @@ export const MONTH_IMAGES = [
   "https://images.unsplash.com/photo-1516466723877-e4ec1d736c8a?q=80&w=1000&auto=format&fit=crop", // Dec - Winter Cabin
 ];
 
-export const DEFAULT_CALENDAR_DATE = new Date(2022, 0, 1);
+export const DEFAULT_CALENDAR_DATE = new Date();
 
 export const STORAGE_KEYS = {
   startDate: "calendar-start",

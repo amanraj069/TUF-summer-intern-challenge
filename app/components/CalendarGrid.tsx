@@ -61,6 +61,9 @@ export default function CalendarGrid({
     Boolean(activeRangeStart && activeRangeEnd) &&
     !isSameDay(activeRangeStart!, activeRangeEnd!);
 
+  // Pivot: startDate selected but no endDate yet — show it highlighted
+  const isPivotMode = Boolean(startDate && !endDate);
+
   const totalDays = differenceInCalendarDays(endDateGrid, startDateGrid) + 1;
   const weeksCount = Math.ceil(totalDays / 7);
 
@@ -97,6 +100,7 @@ export default function CalendarGrid({
             }),
           );
 
+          const isPivot = isPivotMode && isSameDay(cloneDay, startDate!);
           const isToday = isSameDay(cloneDay, new Date());
           const hasRangeNote = notedRanges.some((range) =>
             isWithinInterval(cloneDay, { start: range.start, end: range.end }),
@@ -110,7 +114,14 @@ export default function CalendarGrid({
             "text-xs font-semibold flex items-center justify-center cursor-pointer transition-all duration-200 aspect-square rounded-full w-7 h-7 mx-auto relative z-10 ";
           let dynamicStyle: React.CSSProperties = {};
 
-          if (isSelStart || isSelEnd) {
+          if (isPivot && isCurrentMonth) {
+            // Pivot date: prominent themed highlight
+            cellStyles += "text-white shadow-md scale-110 ";
+            dynamicStyle = {
+              backgroundColor: `${themeColor}cc`,
+              boxShadow: `0 0 0 3px ${themeColor}40, 0 2px 8px ${themeColor}50`,
+            };
+          } else if (isSelStart || isSelEnd) {
             cellStyles += "text-white shadow-md scale-110 ";
             dynamicStyle = {
               backgroundColor: hasConfirmedRange
@@ -135,8 +146,14 @@ export default function CalendarGrid({
             }
           }
 
-          if (isToday && isCurrentMonth && !(isSelStart || isSelEnd)) {
-            cellStyles += "ring-1 ring-sky-500 ring-offset-1 ";
+          if (isToday && isCurrentMonth && !(isSelStart || isSelEnd || isPivot)) {
+            cellStyles += "text-white font-extrabold shadow-lg ";
+            dynamicStyle = {
+              ...dynamicStyle,
+              background: "linear-gradient(135deg, #a3e635 0%, #facc15 100%)",
+              color: "#1a2e05",
+              boxShadow: "0 2px 8px rgba(163, 230, 53, 0.45), 0 0 0 2px rgba(250, 204, 21, 0.35)",
+            };
           }
 
           return (

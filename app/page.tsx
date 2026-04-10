@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useCalendarState } from "./hooks/useCalendarState";
 import { useCalendarTheme } from "./hooks/useCalendarTheme";
 import WireBinding from "./components/WireBinding";
@@ -31,9 +32,40 @@ export default function Home() {
     activeNotesLabel,
   } = useCalendarState();
 
-  const themeColor = useCalendarTheme(currentDate);
+  const { themeColor, getColor } = useCalendarTheme(currentDate);
+
+  // Adjacent month colours — already pre-extracted by the hook,
+  // so they're available synchronously the moment a flip starts.
+  const prevThemeColor = previousDate
+    ? getColor(previousDate.getMonth())
+    : themeColor;
+  const nextThemeColor = targetDate
+    ? getColor(targetDate.getMonth())
+    : themeColor;
 
   const showFlip = isFlipping && previousDate && flipDirection;
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore key events if focus is inside an input or textarea
+      if (
+        e.target instanceof HTMLTextAreaElement ||
+        e.target instanceof HTMLInputElement
+      ) {
+        return;
+      }
+      if (isFlipping) return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        prevMonth();
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        nextMonth();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isFlipping, prevMonth, nextMonth]);
 
   return (
     <main
@@ -83,7 +115,7 @@ export default function Home() {
               >
                 <CalendarHero
                   currentDate={previousDate}
-                  themeColor={themeColor}
+                  themeColor={prevThemeColor}
                   isPickerOpen={false}
                   setIsPickerOpen={() => {}}
                   prevMonth={() => {}}
@@ -96,7 +128,7 @@ export default function Home() {
                     activeNotes={activeNotes}
                     handleNotesChange={() => {}}
                     clearActiveNote={() => {}}
-                    themeColor={themeColor}
+                    themeColor={prevThemeColor}
                   />
                   <CalendarGrid
                     currentDate={previousDate}
@@ -106,7 +138,7 @@ export default function Home() {
                     setHoverDate={() => {}}
                     onDateClick={() => {}}
                     notedRanges={notedRanges}
-                    themeColor={themeColor}
+                    themeColor={prevThemeColor}
                   />
                 </div>
               </div>
@@ -121,7 +153,7 @@ export default function Home() {
               >
                 <CalendarHero
                   currentDate={targetDate}
-                  themeColor={themeColor}
+                  themeColor={nextThemeColor}
                   isPickerOpen={false}
                   setIsPickerOpen={() => {}}
                   prevMonth={() => {}}
@@ -134,7 +166,7 @@ export default function Home() {
                     activeNotes={activeNotes}
                     handleNotesChange={() => {}}
                     clearActiveNote={() => {}}
-                    themeColor={themeColor}
+                    themeColor={nextThemeColor}
                   />
                   <CalendarGrid
                     currentDate={targetDate}
@@ -144,30 +176,16 @@ export default function Home() {
                     setHoverDate={() => {}}
                     onDateClick={() => {}}
                     notedRanges={notedRanges}
-                    themeColor={themeColor}
+                    themeColor={nextThemeColor}
                   />
                 </div>
               </div>
             )}
 
-            {/* ── Shadow cast during flip ── */}
-            {showFlip && (
-              <div
-                className="absolute inset-0 z-10 pointer-events-none page-flip-shadow rounded-xl sm:rounded-2xl"
-                style={{
-                  background:
-                    flipDirection === "next"
-                      ? "linear-gradient(to top, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.06) 40%, transparent 70%)"
-                      : "linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.06) 40%, transparent 70%)",
-                }}
-              />
-            )}
 
             {/* ── Base page (current month) — always in flow ── */}
             <div
-              className={`flex flex-col flex-1 ${
-                showFlip && flipDirection === "next" ? "page-reveal" : ""
-              }`}
+              className="flex flex-col flex-1"
             >
               <CalendarHero
                 currentDate={currentDate}

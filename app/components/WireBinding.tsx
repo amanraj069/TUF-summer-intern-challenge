@@ -10,36 +10,40 @@ export default function WireBinding() {
         <defs>
           <filter id="wire-shadow" x="-50%" y="-50%" width="200%" height="200%">
             <feDropShadow
-              dx="1.5"
-              dy="4"
-              stdDeviation="2.5"
-              floodOpacity="0.5"
+              dx="2"
+              dy="5"
+              stdDeviation="3"
+              floodOpacity="0.7"
             />
           </filter>
           <filter id="rod-shadow" x="-50%" y="-50%" width="200%" height="200%">
             <feDropShadow
               dx="0"
-              dy="5"
-              stdDeviation="3.5"
-              floodOpacity="0.45"
+              dy="6"
+              stdDeviation="4.5"
+              floodOpacity="0.65"
             />
           </filter>
           <filter id="nail-shadow" x="-50%" y="-50%" width="200%" height="200%">
-            <feDropShadow dx="2" dy="5" stdDeviation="3" floodOpacity="0.55" />
+            <feDropShadow dx="2" dy="6" stdDeviation="4" floodOpacity="0.7" />
           </filter>
           <filter id="hole-inset" x="-50%" y="-50%" width="200%" height="200%">
             <feComponentTransfer in="SourceAlpha">
               <feFuncA type="table" tableValues="1 0" />
             </feComponentTransfer>
-            <feGaussianBlur stdDeviation="1.2" />
-            <feOffset dx="0" dy="0.8" result="offsetblur" />
-            <feFlood floodColor="#000" floodOpacity="0.6" />
+            <feGaussianBlur stdDeviation="1.8" />
+            <feOffset dx="0" dy="1" result="offsetblur" />
+            <feFlood floodColor="#000" floodOpacity="0.85" />
             <feComposite in2="offsetblur" operator="in" />
             <feComposite in2="SourceAlpha" operator="in" />
             <feMerge>
               <feMergeNode in="SourceGraphic" />
               <feMergeNode />
             </feMerge>
+          </filter>
+          {/* Shadow cast beneath each hole onto the calendar surface */}
+          <filter id="hole-outer-shadow" x="-100%" y="-50%" width="300%" height="300%">
+            <feDropShadow dx="0" dy="2" stdDeviation="2.5" floodColor="#000" floodOpacity="0.5" />
           </filter>
         </defs>
 
@@ -98,13 +102,22 @@ export default function WireBinding() {
 
           return (
             <g key={`left-${i}`} filter="url(#wire-shadow)">
+              {/* Outer shadow beneath hole */}
+              <ellipse
+                cx={x + 6}
+                cy={62.5}
+                rx={8}
+                ry={3}
+                fill="rgba(0,0,0,0.35)"
+                filter="url(#hole-outer-shadow)"
+              />
               <rect
                 x={x}
                 y="58"
                 width="12"
                 height="7"
                 rx="1.5"
-                fill="#c4c4c9"
+                fill="#a8a8ad"
                 filter="url(#hole-inset)"
               />
 
@@ -155,13 +168,22 @@ export default function WireBinding() {
 
           return (
             <g key={`right-${i}`} filter="url(#wire-shadow)">
+              {/* Outer shadow beneath hole */}
+              <ellipse
+                cx={x + 6}
+                cy={62.5}
+                rx={8}
+                ry={3}
+                fill="rgba(0,0,0,0.35)"
+                filter="url(#hole-outer-shadow)"
+              />
               <rect
                 x={x}
                 y="58"
                 width="12"
                 height="7"
                 rx="1.5"
-                fill="#c4c4c9"
+                fill="#a8a8ad"
                 filter="url(#hole-inset)"
               />
 

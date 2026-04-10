@@ -159,12 +159,39 @@ export function useCalendarState() {
     setIsPickerOpen(false);
   };
 
+  const clearSelection = () => {
+    setStartDate(null);
+    setEndDate(null);
+    setHoverDate(null);
+    setActiveNoteContext({ type: "month" });
+    localStorage.removeItem(STORAGE_KEYS.startDate);
+    localStorage.removeItem(STORAGE_KEYS.endDate);
+  };
+
   const onDateClick = (day: Date) => {
+    // If clicking the pivot date again (startDate set, no endDate), deselect it
+    if (startDate && !endDate && isSameDay(day, startDate)) {
+      clearSelection();
+      return;
+    }
+
+    // If clicking a date within an already-confirmed range, re-select that range
     const matchingRange = notedRanges.find((range) =>
       isWithinInterval(day, { start: range.start, end: range.end }),
     );
 
     if (matchingRange) {
+      // If this range is already selected, deselect it
+      if (
+        startDate &&
+        endDate &&
+        isSameDay(startDate, matchingRange.start) &&
+        isSameDay(endDate, matchingRange.end)
+      ) {
+        clearSelection();
+        return;
+      }
+
       setStartDate(matchingRange.start);
       setEndDate(matchingRange.end);
       setActiveNoteContext({ type: "selection", key: matchingRange.key });

@@ -77,14 +77,12 @@ body {
 @keyframes calendar-reveal {
   0% {
     opacity: 0.3;
-    transform: scale(0.97);
   }
   50% {
     opacity: 0.85;
   }
   100% {
     opacity: 1;
-    transform: scale(1);
   }
 }
 @keyframes flip-shadow-cast {
