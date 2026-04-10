@@ -10,8 +10,9 @@ import {
   addDays,
   differenceInCalendarDays,
   isWithinInterval,
+  parseISO,
 } from "date-fns";
-import { SelectionRange } from "../types";
+import { SelectionRange, Holiday } from "../types";
 import { normalizeSelection } from "../lib/utils";
 
 interface DayCellProps {
@@ -29,6 +30,8 @@ interface DayCellProps {
   today: Date;
   themeColor: string;
   hasRangeSpan: boolean;
+  holidays: Holiday[];
+  dayIndex: number;
   onDateClick: (day: Date) => void;
   setHoverDate: (date: Date | null) => void;
 }
@@ -48,10 +51,13 @@ const DayCell = React.memo(({
   today,
   themeColor,
   hasRangeSpan,
+  holidays,
+  dayIndex,
   onDateClick,
   setHoverDate,
 }: DayCellProps) => {
   const formattedDate = format(cloneDay, "d");
+  const isHoliday = holidays.length > 0;
   const isSelStart = Boolean(activeRangeStart && isSameDay(cloneDay, activeRangeStart));
   const isSelEnd = Boolean(activeRangeEnd && isSameDay(cloneDay, activeRangeEnd));
   
@@ -95,6 +101,9 @@ const DayCell = React.memo(({
     dynamicStyle = { color: themeColor };
   } else if (hasRangeNote) {
     cellStyles += "text-amber-700 font-bold hover:bg-amber-100 ";
+  } else if (isHoliday) {
+    cellStyles += "hover:bg-gray-100 ";
+    dynamicStyle = { color: "#ef4444" }; // Red-500 for holidays
   } else if (cloneDay.getDay() === 0 || cloneDay.getDay() === 6) {
     cellStyles += "hover:bg-gray-100 ";
     dynamicStyle = { color: themeColor };
@@ -150,6 +159,21 @@ const DayCell = React.memo(({
       {hasRangeNote && isCurrentMonth && !(isSelStart || isSelEnd) && (
         <div className="absolute bottom-0 md:bottom-[2px] w-1.5 h-1.5 md:w-1 md:h-1 rounded-full bg-amber-500 z-20 shadow-sm md:shadow-none" />
       )}
+      {isHoliday && isCurrentMonth && (
+        <div className={`absolute opacity-0 group-hover:opacity-100 transition-all duration-200 bottom-full mb-3 z-50 pointer-events-none scale-90 group-hover:scale-100 ${
+          dayIndex >= 5 ? "right-0" : dayIndex <= 1 ? "left-0" : "left-1/2 -translate-x-1/2"
+        }`}>
+          <div className="bg-zinc-900/95 text-[10px] md:text-[11px] font-medium text-white px-2.5 py-1.5 rounded-lg whitespace-nowrap shadow-2xl backdrop-blur-md border border-white/10 flex flex-col items-center gap-0.5">
+            <span className="text-red-400 text-[8px] font-bold tracking-widest uppercase">Holiday</span>
+            {holidays.map((h, i) => (
+              <span key={i}>{h.name}</span>
+            ))}
+            <div className={`absolute top-full border-x-[5px] border-x-transparent border-t-[5px] border-t-zinc-900/95 ${
+              dayIndex >= 5 ? "right-3" : dayIndex <= 1 ? "left-3" : "left-1/2 -translate-x-1/2"
+            }`} />
+          </div>
+        </div>
+      )}
     </div>
   );
 });
@@ -163,6 +187,7 @@ interface CalendarGridProps {
   onDateClick: (day: Date) => void;
   notedRanges: SelectionRange[];
   themeColor: string;
+  holidays: Holiday[];
 }
 
 export default React.memo(function CalendarGrid({
@@ -174,6 +199,7 @@ export default React.memo(function CalendarGrid({
   onDateClick,
   notedRanges,
   themeColor,
+  holidays,
 }: CalendarGridProps) {
   const { startDateGrid, weeksCount, monthStart, today } = useMemo(() => {
     const start = startOfMonth(currentDate);
@@ -221,6 +247,7 @@ export default React.memo(function CalendarGrid({
           const hasRangeNote = notedRanges.some((range) =>
             isWithinInterval(cloneDay, { start: range.start, end: range.end }),
           );
+          const dayHolidays = holidays.filter((h) => isSameDay(parseISO(h.date), cloneDay));
 
           return (
             <DayCell
@@ -236,6 +263,8 @@ export default React.memo(function CalendarGrid({
               hasPreviewRange={hasPreviewRange}
               previewRange={previewRange}
               hasRangeNote={hasRangeNote}
+              holidays={dayHolidays}
+              dayIndex={dayIndex}
               today={today}
               themeColor={themeColor}
               hasRangeSpan={hasRangeSpan}

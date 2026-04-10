@@ -6,7 +6,7 @@ import {
   addMonths,
   subMonths,
 } from "date-fns";
-import { NotesMap, NoteContext, SelectionRange } from "../types";
+import { NotesMap, NoteContext, SelectionRange, Holiday } from "../types";
 import { DEFAULT_CALENDAR_DATE, STORAGE_KEYS } from "../lib/constants";
 import {
   getStoredDate,
@@ -18,6 +18,11 @@ import {
   getMonthKey,
 } from "../lib/utils";
 
+import { getSupplementaryHolidays } from "../lib/holidays";
+
+const GCAL_API_KEY = "AIzaSyBNlYH01_9Hc5S1J9vuFmu2nUqBZJNAXxs";
+const GCAL_CALENDAR_ID = "en.indian%23holiday%40group.v.calendar.google.com";
+
 export function useCalendarState() {
   const [currentDate, setCurrentDate] = useState(DEFAULT_CALENDAR_DATE);
 
@@ -28,6 +33,7 @@ export function useCalendarState() {
   const [hoverDate, setHoverDate] = useState<Date | null>(null);
   const [monthNotes, setMonthNotes] = useState<NotesMap>({});
   const [selectionNotes, setSelectionNotes] = useState<NotesMap>({});
+  const [holidaysByYear, setHolidaysByYear] = useState<Record<number, Holiday[]>>({});
   const [activeNoteContext, setActiveNoteContext] = useState<NoteContext>({
     type: "month",
   });
@@ -44,6 +50,57 @@ export function useCalendarState() {
       .map(([key]) => parseSelectionKey(key))
       .filter((range): range is SelectionRange => Boolean(range))
   , [selectionNotes]);
+
+  const holidays = useMemo(() => 
+    holidaysByYear[currentDate.getFullYear()] || []
+  , [holidaysByYear, currentDate]);
+
+  // Fetch Indian holidays from Google Calendar API when the year changes
+  useEffect(() => {
+    const year = currentDate.getFullYear();
+    if (holidaysByYear[year]) return;
+
+    const controller = new AbortController();
+
+    const fetchHolidays = async () => {
+      try {
+        const url = `https://www.googleapis.com/calendar/v3/calendars/${GCAL_CALENDAR_ID}/events?key=${GCAL_API_KEY}&timeMin=${year}-01-01T00:00:00Z&timeMax=${year}-12-31T23:59:59Z&singleEvents=true&orderBy=startTime&maxResults=200`;
+        const response = await fetch(url, { signal: controller.signal });
+        if (!response.ok) return;
+
+        const json = await response.json();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const apiItems: Holiday[] = (json.items || []).map((event: any) => ({
+          date: event.start?.date || "",
+          name: event.summary || "",
+          localName: event.summary || "",
+          countryCode: "IN",
+          fixed: false,
+          global: event.description === "Public holiday",
+          types: event.description === "Public holiday" ? ["Public"] : ["Observance"],
+        }));
+
+        // Merge supplementary holidays, de-duplicating by date
+        const apiDates = new Set(apiItems.map((h) => h.date));
+        const supplementary = getSupplementaryHolidays(year).filter(
+          (h) => !apiDates.has(h.date),
+        );
+        const merged = [...apiItems, ...supplementary].sort((a, b) =>
+          a.date.localeCompare(b.date),
+        );
+
+        setHolidaysByYear((prev) => ({ ...prev, [year]: merged }));
+      } catch (error) {
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          console.error("Failed to fetch holidays:", error);
+        }
+      }
+    };
+
+    fetchHolidays();
+    return () => controller.abort();
+  }, [currentDate, holidaysByYear]);
+
 
   useEffect(() => {
     setIsMounted(true);
@@ -131,7 +188,7 @@ export function useCalendarState() {
       setFlipDirection(null);
       setPreviousDate(null);
       setTargetDate(null);
-    }, 650);
+    }, 1000);
   }, [currentDate, isFlipping]);
 
   const nextMonth = useCallback(() => {
@@ -255,5 +312,6 @@ export function useCalendarState() {
     onDateClick,
     activeNotes,
     activeNotesLabel,
+    holidays,
   };
 }

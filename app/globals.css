@@ -106,21 +106,21 @@ body {
   }
 }
 .page-flip-next {
-  animation: calendar-flip-next 0.65s cubic-bezier(0.32, 0.72, 0.35, 1) forwards;
+  animation: calendar-flip-next 1s cubic-bezier(0.32, 0.72, 0.35, 1) forwards;
   transform-origin: top center;
   backface-visibility: hidden;
 }
 .page-flip-prev-in {
-  animation: calendar-flip-prev-in 0.65s cubic-bezier(0.32, 0.72, 0.35, 1)
+  animation: calendar-flip-prev-in 1s cubic-bezier(0.32, 0.72, 0.35, 1)
     forwards;
   transform-origin: top center;
   backface-visibility: hidden;
 }
 .page-reveal {
-  animation: calendar-reveal 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  animation: calendar-reveal 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 .page-flip-shadow {
-  animation: flip-shadow-cast 0.65s ease-out forwards;
+  animation: flip-shadow-cast 1s ease-out forwards;
 }
 
 /* Custom scrollbar for notes text area */

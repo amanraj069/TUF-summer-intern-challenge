@@ -45,6 +45,22 @@ export default function WireBinding() {
           <filter id="hole-outer-shadow" x="-100%" y="-100%" width="300%" height="300%">
             <feGaussianBlur stdDeviation="1.5" />
           </filter>
+
+          {/* Realistic Nail Gradient */}
+          <radialGradient id="nail-surface" cx="30%" cy="30%" r="60%">
+            <stop offset="0%" stopColor="#e5e7eb" />
+            <stop offset="40%" stopColor="#9ca3af" />
+            <stop offset="85%" stopColor="#4b5563" />
+            <stop offset="100%" stopColor="#1f2937" />
+          </radialGradient>
+
+          {/* Subtle metal texture - masked to SourceGraphic */}
+          <filter id="nail-texture" x="-20%" y="-20%" width="140%" height="140%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="2" result="noise" />
+            <feColorMatrix in="noise" type="saturate" values="0" result="grayNoise" />
+            <feComposite in="grayNoise" in2="SourceGraphic" operator="in" result="maskedNoise" />
+            <feBlend in="SourceGraphic" in2="maskedNoise" mode="soft-light" />
+          </filter>
         </defs>
 
         {/* === HORIZONTAL ROD with Central Hook === */}
@@ -78,15 +94,65 @@ export default function WireBinding() {
           />
         </g>
 
-        {/* Nail head with its own shadow */}
+        {/* Enhanced Realistic Nail Head */}
         <g filter="url(#nail-shadow)">
+          {/* Main Nail Head with metallic gradient */}
+          <circle
+            cx="240"
+            cy="-13"
+            r="7.5"
+            fill="url(#nail-surface)"
+            filter="url(#nail-texture)"
+          />
+          
+          {/* Inner bevel/rim lighting */}
           <circle
             cx="240"
             cy="-13"
             r="6.8"
-            fill="#777"
-            stroke="#555"
-            strokeWidth="1.2"
+            fill="none"
+            stroke="rgba(255,255,255,0.15)"
+            strokeWidth="0.6"
+          />
+
+          {/* Secondary dark rim for depth */}
+          <circle
+            cx="240"
+            cy="-13"
+            r="7.5"
+            fill="none"
+            stroke="#1f2937"
+            strokeWidth="0.4"
+            opacity="0.6"
+          />
+
+          {/* Primary Specular Highlight (Consistent with top-right lighting) */}
+          <circle
+            cx="242.5"
+            cy="-15.5"
+            r="2.2"
+            fill="white"
+            fillOpacity="0.45"
+            filter="blur(0.8px)"
+          />
+
+          {/* Subtle micro-highlight on the very edge */}
+          <path
+            d="M 245 -13 A 5 5 0 0 0 240 -18"
+            fill="none"
+            stroke="white"
+            strokeWidth="0.5"
+            strokeLinecap="round"
+            opacity="0.3"
+          />
+
+          {/* Center depression (hammer mark) */}
+          <circle
+            cx="240"
+            cy="-13"
+            r="1.2"
+            fill="#111"
+            fillOpacity="0.15"
           />
         </g>
 

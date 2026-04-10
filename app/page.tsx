@@ -27,6 +27,7 @@ export default function Home() {
     onDateClick,
     activeNotes,
     activeNotesLabel,
+    holidays,
   } = useCalendarState();
 
   const { themeColor, getColor } = useCalendarTheme(currentDate);
@@ -143,6 +144,7 @@ export default function Home() {
                     onDateClick={() => {}}
                     notedRanges={notedRanges}
                     themeColor={prevThemeColor}
+                    holidays={holidays}
                   />
                 </div>
               </div>
@@ -178,6 +180,7 @@ export default function Home() {
                     onDateClick={() => {}}
                     notedRanges={notedRanges}
                     themeColor={nextThemeColor}
+                    holidays={holidays}
                   />
                 </div>
               </div>
@@ -213,6 +216,7 @@ export default function Home() {
                   onDateClick={onDateClick}
                   notedRanges={notedRanges}
                   themeColor={themeColor}
+                  holidays={holidays}
                 />
               </div>
             </div>

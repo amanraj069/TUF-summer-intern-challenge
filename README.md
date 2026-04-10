@@ -6,21 +6,27 @@ By leveraging modern React patterns and the latest Next.js architecture, the res
 
 ## Key Features
 
-- **Custom Date Selection Engine**: Implemented purpose-built logic to handle intricate calendar interactions—such as single-date selections, start and end date ranges, and dynamic hover states that highlight the user's anticipated selection path.
-- **Integrated Notes System**: Users can attach contextual notes to specific dates or entire date ranges. The UI seamlessly adapts to present an active note-taking section when interacting with targeted dates.
-- **Responsive & Tactile UI**: The calendar grid and its accompanying layouts naturally adapt to different screen sizes. I also included subtle visual cues (like a custom "wire binding" aesthetic) to give the application a more tactile, realistic feel.
-- **Page-Flip Animation**: Month transitions feature a realistic 3D page-flip effect inspired by wall calendars. Navigating forward flips the current page upward over the wire binding, while navigating backward brings the previous page back from behind—powered entirely by CSS 3D transforms and keyframe animations with no external animation libraries.
-- **Centralized State Management**: Complex calendar states (month traversing, active selections, overlapping ranges) are cleanly encapsulated within custom React hooks, completely separating the complex business logic from the presentational UI components.
+- **Advanced "Pivot-Point" Selection Engine**: Implemented a sophisticated date selection logic that allows users to establish "pivot points" for intuitive range selection. The UI provides real-time hover feedback, highlighting the anticipated selection path based on the relationship between fixed pivots and the current cursor position.
+- **Dynamic Holiday Integration**: Integrated with the Google Calendar API to provide real-time Indian public holiday data. This is supplemented with a dedicated logic layer for regional observances, ensuring users are always aware of upcoming cultural events.
+- **Ultra-Realistic Industrial Design**: The interface features high-fidelity physical metaphors, including:
+    - **Metallic Hardware**: A detailed wall-mount nail with custom radial gradients, noise textures, and directional highlights for a premium tactile feel.
+    - **Physical Binding**: An accurately modeled twin-loop Wire-O binding that features progressive tilting—simulating the way a physical calendar's loops behave as they move away from the center.
+    - **Directional Lighting**: A unified shadow system that casts consistent shadows from the binding loops and hardware, reinforcing the 3D "wall-mounted" appearance.
+- **Seasonal Immersion**: The calendar defaults to the current date and automatically cycles through a curated gallery of high-resolution nature photography. Each month features a unique theme color and aesthetic that updates dynamically.
+- **Synchronized Page-Flip Animation**: Month transitions feature a realistic 3D page-flip effect. The animation is precisely synchronized so that the theme color, hero image, and grid state transition seamlessly at the peak of the fold—powered entirely by CSS 3D transforms.
+- **Integrated Notes System**: Users can attach contextual notes to specific dates or ranges. The UI seamlessly adapts to present an active note-taking section with a "lined paper" aesthetic that scales perfectly across devices.
+- **Centralized State Management**: Complex logic—including holiday fetching, pivot selection, and animation orchestration—is cleanly encapsulated within custom React hooks (`useCalendarState` and `useCalendarTheme`).
 
 ## Technical Architecture & Design Choices
 
 When architecting this solution, I prioritized maintainability, performance, and keeping the dependency graph as minimal as possible:
 
-- **Next.js 16 (App Router)**: I chose Next.js for its optimized build process, developer experience, and modern routing capabilities. Even though the calendar requires significant client-side interactivity, Next.js provides a robust, enterprise-ready baseline.
-- **React 19**: Benefiting from the latest features in React, state is managed via isolated, purpose-built hooks (`useCalendarState` and `useCalendarTheme`). This approach keeps the component files lightweight and highly readable.
-- **Tailwind CSS v4**: Tailwind handles all of our styling needs. Adopting a utility-first approach avoided the need for bloated, tangled CSS files and made implementing the responsive grid and interactive hover states incredibly fast.
-- **Lucide React & Date-fns**: `lucide-react` supplies the clean, unified iconography, while `date-fns` acts as the engine for all date math and string formatting—bringing absolute reliability without the massive payload footprint of older libraries like Moment.js.
-- **CSS 3D Page-Flip Animations**: Month transitions use pure CSS `rotateX` transforms with `perspective` and `backface-visibility` to produce a physical page-turning effect. Directional logic (`next` vs `prev`) drives separate keyframe animations, shadow overlays, and staggered state updates to keep the visual flow seamless.
+- **Next.js 16 (App Router)**: I chose Next.js for its optimized build process and modern routing. The app leverages the App Router for clean structure while maintaining high client-side interactivity.
+- **React 19**: Utilizes the latest React patterns, managing complex state via isolated hooks. This ensures that visual transitions (like theme coloring and image swaps) are synchronized with the 3D flip animation state.
+- **Tailwind CSS v4 & Native CSS**: While Tailwind handles the primary utility styling, we utilize native CSS for high-performance 3D transforms and custom filter-based noise textures to achieve the metallic hardware aesthetics.
+- **Google Calendar API integration**: A dedicated holiday handling layer fetches and sanitizes public holiday data, merging it with local supplementary data for a comprehensive regional experience.
+- **Date-fns**: Acts as the reliable engine for all date calculations, pivot logic, and locale-based formatting.
+- **3D Orchestration**: Month transitions use pure CSS `rotateX` transforms with `perspective` and `backface-visibility`. The `useCalendarState` hook manages a "look-ahead" state, pre-calculating the next month's theme and visuals to ensure zero "flicker" during the 500ms flip duration.
 
 ## Directory Structure
 
