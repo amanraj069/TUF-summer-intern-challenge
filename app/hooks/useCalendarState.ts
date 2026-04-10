@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   format,
   isSameDay,
@@ -37,12 +37,13 @@ export function useCalendarState() {
   );
   const [previousDate, setPreviousDate] = useState<Date | null>(null);
   const [targetDate, setTargetDate] = useState<Date | null>(null);
-  const [isPickerOpen, setIsPickerOpen] = useState(false);
 
-  const notedRanges = Object.entries(selectionNotes)
-    .filter(([, note]) => note.trim().length > 0)
-    .map(([key]) => parseSelectionKey(key))
-    .filter((range): range is SelectionRange => Boolean(range));
+  const notedRanges = useMemo(() => 
+    Object.entries(selectionNotes)
+      .filter(([, note]) => note.trim().length > 0)
+      .map(([key]) => parseSelectionKey(key))
+      .filter((range): range is SelectionRange => Boolean(range))
+  , [selectionNotes]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -74,7 +75,7 @@ export function useCalendarState() {
     );
   }, [selectionNotes, isMounted]);
 
-  const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newNotes = e.target.value;
 
     if (activeNoteContext.type === "selection") {
@@ -87,9 +88,9 @@ export function useCalendarState() {
 
     const monthKey = getMonthKey(currentDate);
     setMonthNotes((prev) => ({ ...prev, [monthKey]: newNotes }));
-  };
+  }, [activeNoteContext, currentDate]);
 
-  const clearActiveNote = () => {
+  const clearActiveNote = useCallback(() => {
     if (activeNoteContext.type === "selection") {
       setSelectionNotes((prev) => {
         const next = { ...prev };
@@ -105,9 +106,9 @@ export function useCalendarState() {
       delete next[monthKey];
       return next;
     });
-  };
+  }, [activeNoteContext, currentDate]);
 
-  const triggerFlipAnimation = (
+  const triggerFlipAnimation = useCallback((
     direction: "next" | "prev",
     newDateFn: (prev: Date) => Date,
   ) => {
@@ -131,44 +132,32 @@ export function useCalendarState() {
       setPreviousDate(null);
       setTargetDate(null);
     }, 650);
-  };
+  }, [currentDate, isFlipping]);
 
-  const nextMonth = () => {
+  const nextMonth = useCallback(() => {
     triggerFlipAnimation("next", (prev) => addMonths(prev, 1));
     if (!startDate || endDate) {
       setActiveNoteContext({ type: "month" });
     }
-  };
+  }, [triggerFlipAnimation, startDate, endDate]);
 
-  const prevMonth = () => {
+  const prevMonth = useCallback(() => {
     triggerFlipAnimation("prev", (prev) => subMonths(prev, 1));
     if (!startDate || endDate) {
       setActiveNoteContext({ type: "month" });
     }
-  };
+  }, [triggerFlipAnimation, startDate, endDate]);
 
-  const selectMonth = (idx: number) => {
-    const direction = idx > currentDate.getMonth() ? "next" : "prev";
-    triggerFlipAnimation(
-      direction,
-      (prev) => new Date(prev.getFullYear(), idx, 1),
-    );
-    if (!startDate || endDate) {
-      setActiveNoteContext({ type: "month" });
-    }
-    setIsPickerOpen(false);
-  };
-
-  const clearSelection = () => {
+  const clearSelection = useCallback(() => {
     setStartDate(null);
     setEndDate(null);
     setHoverDate(null);
     setActiveNoteContext({ type: "month" });
     localStorage.removeItem(STORAGE_KEYS.startDate);
     localStorage.removeItem(STORAGE_KEYS.endDate);
-  };
+  }, []);
 
-  const onDateClick = (day: Date) => {
+  const onDateClick = useCallback((day: Date) => {
     // If clicking the pivot date again (startDate set, no endDate), deselect it
     if (startDate && !endDate && isSameDay(day, startDate)) {
       clearSelection();
@@ -224,26 +213,29 @@ export function useCalendarState() {
       localStorage.setItem(STORAGE_KEYS.startDate, day.toISOString());
       localStorage.removeItem(STORAGE_KEYS.endDate);
     }
-  };
+  }, [startDate, endDate, notedRanges, clearSelection]);
 
-  const activeSelectionRange =
+  const activeSelectionRange = useMemo(() => 
     activeNoteContext.type === "selection"
       ? parseSelectionKey(activeNoteContext.key)
-      : null;
+      : null
+  , [activeNoteContext]);
 
-  const activeNotes =
+  const activeNotes = useMemo(() => 
     activeNoteContext.type === "selection"
       ? (selectionNotes[activeNoteContext.key] ?? "")
-      : (monthNotes[getMonthKey(currentDate)] ?? "");
+      : (monthNotes[getMonthKey(currentDate)] ?? "")
+  , [activeNoteContext, selectionNotes, monthNotes, currentDate]);
 
-  const activeNotesLabel =
+  const activeNotesLabel = useMemo(() => 
     activeNoteContext.type === "selection"
       ? activeSelectionRange
         ? isSameDay(activeSelectionRange.start, activeSelectionRange.end)
           ? format(activeSelectionRange.start, "dd MMM yyyy")
           : `${format(activeSelectionRange.start, "dd MMM")} - ${format(activeSelectionRange.end, "dd MMM yyyy")}`
         : "Select day(s) to attach a note"
-      : format(currentDate, "MMMM yyyy");
+      : format(currentDate, "MMMM yyyy")
+  , [activeNoteContext, activeSelectionRange, currentDate]);
 
   return {
     currentDate,
@@ -255,14 +247,11 @@ export function useCalendarState() {
     setHoverDate,
     isFlipping,
     flipDirection,
-    isPickerOpen,
-    setIsPickerOpen,
     notedRanges,
     handleNotesChange,
     clearActiveNote,
     nextMonth,
     prevMonth,
-    selectMonth,
     onDateClick,
     activeNotes,
     activeNotesLabel,

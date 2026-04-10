@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useCalendarState } from "./hooks/useCalendarState";
 import { useCalendarTheme } from "./hooks/useCalendarTheme";
 import WireBinding from "./components/WireBinding";
@@ -19,20 +19,21 @@ export default function Home() {
     setHoverDate,
     isFlipping,
     flipDirection,
-    isPickerOpen,
-    setIsPickerOpen,
     notedRanges,
     handleNotesChange,
     clearActiveNote,
     nextMonth,
     prevMonth,
-    selectMonth,
     onDateClick,
     activeNotes,
     activeNotesLabel,
   } = useCalendarState();
 
   const { themeColor, getColor } = useCalendarTheme(currentDate);
+
+  const backgroundColor = useMemo(() => 
+    `color-mix(in srgb, ${themeColor} 50%, #e4e4e7)`
+  , [themeColor]);
 
   // Adjacent month colours — already pre-extracted by the hook,
   // so they're available synchronously the moment a flip starts.
@@ -72,7 +73,7 @@ export default function Home() {
       className="wall-pattern min-h-[100dvh] w-full flex items-center justify-center overflow-y-auto overflow-x-hidden font-sans py-12 md:py-16 px-4 sm:px-6 transition-colors duration-700 ease-in-out"
       style={{
         perspective: "1200px",
-        backgroundColor: `color-mix(in srgb, ${themeColor} 50%, #e4e4e7)`,
+        backgroundColor,
       }}
     >
       <div className="relative w-full max-w-[480px] mt-8 md:mt-0 mb-8 md:mb-0">
@@ -102,6 +103,7 @@ export default function Home() {
             boxShadow:
               "-3px 4px 10px -2px rgba(0,0,0,0.2), -1px 2px 4px rgba(0,0,0,0.1)",
             zIndex: 5,
+            willChange: isFlipping ? "transform" : "auto",
           }}
         >
           <WireBinding />
@@ -121,13 +123,10 @@ export default function Home() {
                 <CalendarHero
                   currentDate={previousDate}
                   themeColor={prevThemeColor}
-                  isPickerOpen={false}
-                  setIsPickerOpen={() => {}}
                   prevMonth={() => {}}
                   nextMonth={() => {}}
-                  selectMonth={() => {}}
                 />
-                <div className="flex flex-col-reverse md:flex-row flex-1 p-4 md:p-5 gap-3 md:gap-3 bg-white relative z-10 w-full">
+                <div className="flex flex-col-reverse md:flex-row flex-1 p-3 pb-2 md:p-5 gap-2 md:gap-3 bg-white relative z-10 w-full">
                   <NotesSection
                     activeNotesLabel={activeNotesLabel}
                     activeNotes={activeNotes}
@@ -159,13 +158,10 @@ export default function Home() {
                 <CalendarHero
                   currentDate={targetDate}
                   themeColor={nextThemeColor}
-                  isPickerOpen={false}
-                  setIsPickerOpen={() => {}}
                   prevMonth={() => {}}
                   nextMonth={() => {}}
-                  selectMonth={() => {}}
                 />
-                <div className="flex flex-col-reverse md:flex-row flex-1 p-4 md:p-5 gap-3 md:gap-3 bg-white relative z-10 w-full">
+                <div className="flex flex-col-reverse md:flex-row flex-1 p-3 pb-2 md:p-5 gap-2 md:gap-3 bg-white relative z-10 w-full">
                   <NotesSection
                     activeNotesLabel={activeNotesLabel}
                     activeNotes={activeNotes}
@@ -195,14 +191,11 @@ export default function Home() {
               <CalendarHero
                 currentDate={currentDate}
                 themeColor={themeColor}
-                isPickerOpen={isPickerOpen}
-                setIsPickerOpen={setIsPickerOpen}
                 prevMonth={prevMonth}
                 nextMonth={nextMonth}
-                selectMonth={selectMonth}
               />
 
-              <div className="flex flex-col-reverse md:flex-row flex-1 p-4 md:p-5 gap-3 md:gap-3 rounded-b-xl sm:rounded-b-2xl bg-white relative z-10 w-full">
+              <div className="flex flex-col-reverse md:flex-row flex-1 p-3 pb-2 md:p-5 gap-2 md:gap-3 rounded-b-xl sm:rounded-b-2xl bg-white relative z-10 w-full">
                 <NotesSection
                   activeNotesLabel={activeNotesLabel}
                   activeNotes={activeNotes}
