@@ -8,32 +8,32 @@ export default function WireBinding() {
         className="overflow-visible"
       >
         <defs>
-          <filter id="wire-shadow" x="-50%" y="-50%" width="200%" height="200%">
+          <filter id="wire-shadow" x="-100%" y="-100%" width="300%" height="300%">
             <feDropShadow
-              dx="2"
+              dx="-3"
               dy="5"
               stdDeviation="3"
               floodOpacity="0.7"
             />
           </filter>
-          <filter id="rod-shadow" x="-50%" y="-50%" width="200%" height="200%">
+          <filter id="rod-shadow" x="-100%" y="-100%" width="300%" height="300%">
             <feDropShadow
-              dx="0"
+              dx="-5"
               dy="6"
               stdDeviation="4.5"
               floodOpacity="0.65"
             />
           </filter>
-          <filter id="nail-shadow" x="-50%" y="-50%" width="200%" height="200%">
-            <feDropShadow dx="2" dy="6" stdDeviation="4" floodOpacity="0.7" />
+          <filter id="nail-shadow" x="-100%" y="-100%" width="300%" height="300%">
+            <feDropShadow dx="-6" dy="8" stdDeviation="5" floodOpacity="0.5" />
           </filter>
-          <filter id="hole-inset" x="-50%" y="-50%" width="200%" height="200%">
+          <filter id="hole-inset" x="-100%" y="-100%" width="300%" height="300%">
             <feComponentTransfer in="SourceAlpha">
               <feFuncA type="table" tableValues="1 0" />
             </feComponentTransfer>
-            <feGaussianBlur stdDeviation="1.8" />
-            <feOffset dx="0" dy="1" result="offsetblur" />
-            <feFlood floodColor="#000" floodOpacity="0.85" />
+            <feGaussianBlur stdDeviation="1.2" />
+            <feOffset dx="-1.5" dy="1.5" result="offsetblur" />
+            <feFlood floodColor="#000" floodOpacity="0.75" />
             <feComposite in2="offsetblur" operator="in" />
             <feComposite in2="SourceAlpha" operator="in" />
             <feMerge>
@@ -41,9 +41,9 @@ export default function WireBinding() {
               <feMergeNode />
             </feMerge>
           </filter>
-          {/* Shadow cast beneath each hole onto the calendar surface */}
-          <filter id="hole-outer-shadow" x="-100%" y="-50%" width="300%" height="300%">
-            <feDropShadow dx="0" dy="2" stdDeviation="2.5" floodColor="#000" floodOpacity="0.5" />
+          {/* Subtle depression around the hole */}
+          <filter id="hole-outer-shadow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="1.5" />
           </filter>
         </defs>
 
@@ -101,14 +101,14 @@ export default function WireBinding() {
           const paperTop = 46.2;
 
           return (
-            <g key={`left-${i}`} filter="url(#wire-shadow)">
+            <g key={`left-${i}`}>
               {/* Outer shadow beneath hole */}
               <ellipse
-                cx={x + 6}
-                cy={62.5}
-                rx={8}
-                ry={3}
-                fill="rgba(0,0,0,0.35)"
+                cx={x + 5}
+                cy={62}
+                rx={6.5}
+                ry={2.5}
+                fill="rgba(0,0,0,0.15)"
                 filter="url(#hole-outer-shadow)"
               />
               <rect
@@ -121,37 +121,39 @@ export default function WireBinding() {
                 filter="url(#hole-inset)"
               />
 
-              <path
-                d={`M ${x + 3 + backTilt * 1.5} ${paperTop} C ${x + 3 + backTilt} 38, ${x + 3 + backTilt * 0.5} 32, ${x + 3 - tilt * 0.1} ${28}`}
-                fill="none"
-                stroke="#111"
-                strokeWidth="1.2"
-                strokeLinecap="round"
-                opacity="0.85"
-              />
-              <path
-                d={`M ${x + 9 + backTilt * 1.5} ${paperTop} C ${x + 9 + backTilt} 38, ${x + 9 + backTilt * 0.5} 32, ${x + 9 - tilt * 0.1} ${28}`}
-                fill="none"
-                stroke="#111"
-                strokeWidth="1.2"
-                strokeLinecap="round"
-                opacity="0.85"
-              />
+              <g filter="url(#wire-shadow)">
+                <path
+                  d={`M ${x + 3 + backTilt * 1.5} ${paperTop} C ${x + 3 + backTilt} 38, ${x + 3 + backTilt * 0.5} 32, ${x + 3 - tilt * 0.1} ${28}`}
+                  fill="none"
+                  stroke="#111"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                  opacity="0.85"
+                />
+                <path
+                  d={`M ${x + 9 + backTilt * 1.5} ${paperTop} C ${x + 9 + backTilt} 38, ${x + 9 + backTilt * 0.5} 32, ${x + 9 - tilt * 0.1} ${28}`}
+                  fill="none"
+                  stroke="#111"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                  opacity="0.85"
+                />
 
-              <path
-                d={`M ${x + 3} 61 C ${x + 3 - tilt - spread} 61, ${x + 3 - tilt - spread} ${61 - loopHeight}, ${x + 3 - tilt * 0.3} ${28}`}
-                fill="none"
-                stroke="#333"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
-              <path
-                d={`M ${x + 9} 61 C ${x + 9 - tilt - spread} 61, ${x + 9 - tilt - spread} ${61 - loopHeight}, ${x + 9 - tilt * 0.3} ${28}`}
-                fill="none"
-                stroke="#333"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
+                <path
+                  d={`M ${x + 3} 61 C ${x + 3 - tilt - spread} 61, ${x + 3 - tilt - spread} ${61 - loopHeight}, ${x + 3 - tilt * 0.3} ${28}`}
+                  fill="none"
+                  stroke="#333"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+                <path
+                  d={`M ${x + 9} 61 C ${x + 9 - tilt - spread} 61, ${x + 9 - tilt - spread} ${61 - loopHeight}, ${x + 9 - tilt * 0.3} ${28}`}
+                  fill="none"
+                  stroke="#333"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              </g>
             </g>
           );
         })}
@@ -167,14 +169,14 @@ export default function WireBinding() {
           const paperTop = 46.2;
 
           return (
-            <g key={`right-${i}`} filter="url(#wire-shadow)">
+            <g key={`right-${i}`}>
               {/* Outer shadow beneath hole */}
               <ellipse
-                cx={x + 6}
-                cy={62.5}
-                rx={8}
-                ry={3}
-                fill="rgba(0,0,0,0.35)"
+                cx={x + 5}
+                cy={62}
+                rx={6.5}
+                ry={2.5}
+                fill="rgba(0,0,0,0.15)"
                 filter="url(#hole-outer-shadow)"
               />
               <rect
@@ -187,37 +189,39 @@ export default function WireBinding() {
                 filter="url(#hole-inset)"
               />
 
-              <path
-                d={`M ${x + 3 - backTilt * 1.5} ${paperTop} C ${x + 3 - backTilt} 38, ${x + 3 - backTilt * 0.5} 32, ${x + 3 + tilt * 0.1} ${28}`}
-                fill="none"
-                stroke="#111"
-                strokeWidth="1.2"
-                strokeLinecap="round"
-                opacity="0.85"
-              />
-              <path
-                d={`M ${x + 9 - backTilt * 1.5} ${paperTop} C ${x + 9 - backTilt} 38, ${x + 9 - backTilt * 0.5} 32, ${x + 9 + tilt * 0.1} ${28}`}
-                fill="none"
-                stroke="#111"
-                strokeWidth="1.2"
-                strokeLinecap="round"
-                opacity="0.85"
-              />
+              <g filter="url(#wire-shadow)">
+                <path
+                  d={`M ${x + 3 - backTilt * 1.5} ${paperTop} C ${x + 3 - backTilt} 38, ${x + 3 - backTilt * 0.5} 32, ${x + 3 + tilt * 0.1} ${28}`}
+                  fill="none"
+                  stroke="#111"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                  opacity="0.85"
+                />
+                <path
+                  d={`M ${x + 9 - backTilt * 1.5} ${paperTop} C ${x + 9 - backTilt} 38, ${x + 9 - backTilt * 0.5} 32, ${x + 9 + tilt * 0.1} ${28}`}
+                  fill="none"
+                  stroke="#111"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                  opacity="0.85"
+                />
 
-              <path
-                d={`M ${x + 3} 61 C ${x + 3 + tilt + spread} 61, ${x + 3 + tilt + spread} ${61 - loopHeight}, ${x + 3 + tilt * 0.3} ${28}`}
-                fill="none"
-                stroke="#333"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
-              <path
-                d={`M ${x + 9} 61 C ${x + 9 + tilt + spread} 61, ${x + 9 + tilt + spread} ${61 - loopHeight}, ${x + 9 + tilt * 0.3} ${28}`}
-                fill="none"
-                stroke="#333"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
+                <path
+                  d={`M ${x + 3} 61 C ${x + 3 + tilt + spread} 61, ${x + 3 + tilt + spread} ${61 - loopHeight}, ${x + 3 + tilt * 0.3} ${28}`}
+                  fill="none"
+                  stroke="#333"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+                <path
+                  d={`M ${x + 9} 61 C ${x + 9 + tilt + spread} 61, ${x + 9 + tilt + spread} ${61 - loopHeight}, ${x + 9 + tilt * 0.3} ${28}`}
+                  fill="none"
+                  stroke="#333"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              </g>
             </g>
           );
         })}

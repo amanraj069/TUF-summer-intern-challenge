@@ -70,7 +70,7 @@ export default function CalendarGrid({
   const renderCells = () =>
     Array.from({ length: weeksCount }, (_, weekIndex) => (
       <div
-        className="grid grid-cols-7 text-center w-full gap-y-2 md:gap-y-1 mb-2 md:mb-1"
+        className="grid grid-cols-7 text-center w-full gap-y-1 mb-1"
         key={`week-${weekIndex}`}
       >
         {Array.from({ length: 7 }, (_, dayIndex) => {
@@ -111,7 +111,7 @@ export default function CalendarGrid({
             : `${themeColor}22`;
 
           let cellStyles =
-            "text-xs font-semibold flex items-center justify-center cursor-pointer transition-all duration-200 aspect-square rounded-full w-7 h-7 mx-auto relative z-10 ";
+            "text-xs font-semibold flex items-center justify-center cursor-pointer transition-all duration-200 aspect-square rounded-full w-6 h-6 md:w-7 md:h-7 mx-auto relative z-10 ";
           let dynamicStyle: React.CSSProperties = {};
 
           if (isPivot && isCurrentMonth) {
@@ -168,7 +168,7 @@ export default function CalendarGrid({
             >
               {showRangeTrail && !isSelStart && !isSelEnd && (
                 <div
-                  className="absolute top-1/2 -mt-4 md:-mt-3.5 h-8 md:h-7 w-full z-0"
+                  className="absolute top-1/2 -mt-3.5 h-7 w-full z-0"
                   style={{ backgroundColor: rangeFillColor }}
                 />
               )}
@@ -177,7 +177,7 @@ export default function CalendarGrid({
                 activeRangeEnd &&
                 hasRangeSpan && (
                   <div
-                    className={`absolute top-1/2 -mt-4 md:-mt-3.5 h-8 md:h-7 w-1/2 z-0 ${
+                    className={`absolute top-1/2 -mt-3.5 h-7 w-1/2 z-0 ${
                       isSelStart
                         ? cloneDay.getDay() === 0
                           ? "hidden"
@@ -216,7 +216,7 @@ export default function CalendarGrid({
           </div>
         ))}
       </div>
-      <div className="w-full relative h-[210px] md:h-[192px] flex flex-col justify-center gap-0.5 md:gap-0">
+      <div className="w-full relative h-[170px] md:h-[192px] flex flex-col justify-center gap-0">
         {renderCells()}
       </div>
     </div>

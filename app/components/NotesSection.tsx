@@ -16,7 +16,7 @@ export default function NotesSection({
   themeColor,
 }: NotesSectionProps) {
   return (
-    <div className="w-full md:w-[34%] flex flex-col md:pr-4 md:border-r border-zinc-100 min-h-[120px] md:min-h-0 pt-3 md:pt-0 border-t md:border-t-0 md:border-b-0 pb-2 md:pb-0">
+    <div className="w-full md:w-[34%] flex flex-col md:pr-4 md:border-r border-zinc-100 min-h-[144px] md:min-h-0 pt-3 md:pt-0 border-t md:border-t-0 md:border-b-0 pb-2 md:pb-0">
       <div className="flex flex-row md:flex-col items-center md:items-start justify-between md:justify-start mb-2 md:mb-3">
         <h3 className="text-xs md:text-[12px] font-extrabold text-zinc-800 tracking-tight">
           Notes

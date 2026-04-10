@@ -69,8 +69,11 @@ export default function Home() {
 
   return (
     <main
-      className="min-h-screen w-full flex items-center justify-center bg-zinc-200 overflow-y-auto overflow-x-hidden font-sans py-12 md:py-16 px-4 sm:px-6"
-      style={{ perspective: "1200px" }}
+      className="wall-pattern min-h-[100dvh] w-full flex items-center justify-center overflow-y-auto overflow-x-hidden font-sans py-12 md:py-16 px-4 sm:px-6 transition-colors duration-700 ease-in-out"
+      style={{
+        perspective: "1200px",
+        backgroundColor: `color-mix(in srgb, ${themeColor} 50%, #e4e4e7)`,
+      }}
     >
       <div className="relative w-full max-w-[480px] mt-8 md:mt-0 mb-8 md:mb-0">
         {/* Stacked pages behind the calendar */}
@@ -83,7 +86,9 @@ export default function Home() {
               className="absolute inset-x-0 top-0 bottom-0 bg-white rounded-xl sm:rounded-2xl"
               style={{
                 transform: `translateY(${offsetY}px)`,
-                boxShadow: `0 ${1 + layer}px ${3 + layer * 2}px rgba(0,0,0,${0.06 + layer * 0.02})`,
+                boxShadow: i === 0 
+                  ? "-40px 70px 110px -20px rgba(0,0,0,0.6), -15px 25px 45px -10px rgba(0,0,0,0.3), -5px 10px 20px -5px rgba(0,0,0,0.2), -1px 2px 4px rgba(0,0,0,0.1)"
+                  : `-${2 + layer}px ${3 + layer * 2}px ${5 + layer * 3}px -2px rgba(0,0,0,${0.1 + layer * 0.03})`,
                 zIndex: i,
               }}
             />
@@ -95,7 +100,7 @@ export default function Home() {
           style={{
             transformOrigin: "center -30px",
             boxShadow:
-              "0 40px 90px -10px rgba(0,0,0,0.45), 0 20px 45px -5px rgba(0,0,0,0.25), 0 8px 20px 0px rgba(0,0,0,0.12), 0 2px 6px 0px rgba(0,0,0,0.06)",
+              "-3px 4px 10px -2px rgba(0,0,0,0.2), -1px 2px 4px rgba(0,0,0,0.1)",
             zIndex: 5,
           }}
         >
